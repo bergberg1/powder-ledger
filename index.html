@@ -1348,7 +1348,21 @@ function drawDetailCams(l){
 /* ===================== Sources & methods tab ===================== */
 function renderSources(){
   $('#sources').innerHTML = `
-  <h2>How to read this dashboard</h2>
+  <h2>Plain-English guide to the numbers</h2>
+  <p>If you only read one section, read this one.</p>
+  <dl class="kv" style="row-gap:10px;max-width:none">
+    <dt>Agreement</dt><dd>Several weather models each make their own forecast. If they all land near the same total, agreement is <b>high</b> and the number is trustworthy. If one says 3 inches and another says 15, agreement is <b>low</b> and the number is a coin flip. The "model range" column shows that low-to-high spread. Day 1–2 is usually high; day 4–7 is often low, and that is normal.</dd>
+    <dt>Ratio (snow-to-liquid)</dt><dd>How fluffy the snow is. It is the number of inches of snow you get from one inch of melted water. <b>10:1</b> is average. <b>15:1 to 20:1</b> is light, dry powder (cold storms). <b>5:1 to 8:1</b> is heavy, wet snow (warm storms, often early and late season). The same storm can give 6 inches of cement at one mountain and 12 inches of fluff at a colder one.</dd>
+    <dt>Flow fit</dt><dd>Mountains get the most snow when the wind at ridge height blows up their favored side. "Favorable" means the forecast wind is coming from a direction that historically dumps on this mountain. "Shadowed" means a neighboring range is upwind and will steal the moisture. "Light winds" or "variable flow" means there is no strong push either way, so terrain matters less than usual.</dd>
+    <dt>700 mb</dt><dd>A level in the atmosphere about 10,000 ft up, roughly ridge-top height for these ranges. Wind direction and temperature up there decide where the snow lands and how dense it is. It is the single level forecasters look at most for mountain snow.</dd>
+    <dt>500 mb and the trough axis</dt><dd>About 18,000 ft up, where the storm's steering pattern lives. A "trough" is a dip in that pattern, meaning a storm. The trough axis is its center line; the map's <b>L</b> is the low center. Snow is heaviest just ahead of it (warm, moist, southwest wind) and turns colder and lighter behind it (northwest wind).</dd>
+    <dt>Snow level</dt><dd>The elevation above which precipitation falls as snow. If it is above a resort's base, the bottom of the mountain gets rain or slush and the forecast total only applies up high.</dd>
+    <dt>Powder score</dt><dd>A 0–100 ranking for the next three days that combines how much snow (45 points), how fluffy (20), how windy (15), how much the models agree (12) and whether the terrain lines up with the wind (8). 70+ means go; 50–70 means plan around the best morning; under 30 means wait.</dd>
+    <dt>Ensemble</dt><dd>The same model run 30–50 times with tiny differences in the starting conditions. The band it draws shows the realistic range of outcomes. A narrow band means confidence; a wide band means the atmosphere is in a touchy state and any single forecast could be wrong.</dd>
+    <dt>Gusts</dt><dd>Peak wind at the surface. Above about 40 mph, upper lifts go on wind hold and ridgelines get scoured; the best snow will be in sheltered trees.</dd>
+    <dt>Blend</dt><dd>The headline number is the average of the global models. Switch it to a single model if you have a favorite; ECMWF is usually the most skillful, GFS updates most often.</dd>
+  </dl>
+  <h2 style="margin-top:22px">How to read this dashboard</h2>
   <p>Every number here is computed in your browser from raw model output, so you can see the ingredients instead of a resort's marketing number. The pipeline for each mountain:</p>
   <ol>
     <li><b>Liquid first.</b> Each model's hourly precipitation and snowfall are pulled for the mountain's coordinates, with the model's temperature profile downscaled to the upper-mountain elevation.</li>
