@@ -25,14 +25,17 @@ const state = {
   mapDay:'all', stripDay:'all', offset:-6*3600, now:Math.floor(Date.now()/1000),
   afd:{}, nwsGrid:{}, snotel:{}, ens:{},
 };
-function loadPrefs(){ try{ return Object.assign({slrMode:'kuchera', blendMode:'mean', drive:10, theme:''}, JSON.parse(localStorage.getItem('pl.prefs')||'{}')); }catch(e){ return {slrMode:'kuchera', blendMode:'mean', drive:10, theme:''}; } }
+function loadPrefs(){ const d={slrMode:'kuchera', blendMode:'mean', drive:10, theme:'', favs:[]}; try{ const o=Object.assign(d, JSON.parse(localStorage.getItem('pl.prefs')||'{}')); if(!Array.isArray(o.favs)) o.favs=[]; return o; }catch(e){ return d; } }
+function isFav(id){ return (state.prefs.favs||[]).includes(id); }
+function toggleFav(id){ const f=state.prefs.favs||[]; const i=f.indexOf(id); if(i>=0) f.splice(i,1); else f.push(id); state.prefs.favs=f; savePrefs(); renderRegionChips(); renderAll(); if(state.selected){ const b=$('#detailStar'); if(b) b.setAttribute('aria-pressed', isFav(state.selected)); } }
 function savePrefs(){ try{ localStorage.setItem('pl.prefs', JSON.stringify(state.prefs)); }catch(e){} }
 function cacheGet(k){ try{ const v=JSON.parse(localStorage.getItem('pl.cache.'+k)||'null'); if(v && Date.now()-v.t<CACHE_TTL_MS) return v; }catch(e){} return null; }
 function cacheSet(k,data){ try{ localStorage.setItem('pl.cache.'+k, JSON.stringify({t:Date.now(),data})); }catch(e){ /* quota: ignore */ } }
 
 /* ---------- Open-Meteo ---------- */
-function omUrl(modelId, vars, withElev){
+function omUrl(modelId, vars, withElev, pastDays){
   const p = new URLSearchParams();
+  if(pastDays) p.set('past_days', String(pastDays));
   p.set('latitude', LOCATIONS.map(l=>l.lat).join(','));
   p.set('longitude', LOCATIONS.map(l=>l.lon).join(','));
   if(withElev!==false) p.set('elevation', LOCATIONS.map(l=>Math.round(l.midFt*0.3048)).join(','));
@@ -59,19 +62,21 @@ async function fetchModel(m, force){
   if(!force){ const c=cacheGet(key); if(c){ state.models[m.id] = Object.assign({fromCache:true, fetchedAt:c.t}, c.data); return; } }
   const attempts = [];
   for(const id of m.ids){
-    for(const elev of [true,false]){
-      attempts.push({id, elev, vars:[...CORE_HOURLY, ...EXT_HOURLY, ...(m.pressure?PRES_HOURLY:[])], note:''});
-      if(m.pressure) attempts.push({id, elev, vars:[...CORE_HOURLY, ...EXT_HOURLY], note:'700 mb fields unavailable for this model'});
-      attempts.push({id, elev, vars:[...CORE_HOURLY], note:'freezing level unavailable for this model'});
+    for(const past of [3,0]){
+      for(const elev of [true,false]){
+        attempts.push({id, elev, past, vars:[...CORE_HOURLY, ...EXT_HOURLY, ...(m.pressure?PRES_HOURLY:[])], note: past?'':'no past-days history for this model'});
+        if(m.pressure) attempts.push({id, elev, past, vars:[...CORE_HOURLY, ...EXT_HOURLY], note:'700 mb fields unavailable for this model'});
+        attempts.push({id, elev, past, vars:[...CORE_HOURLY], note:'freezing level unavailable for this model'});
+      }
     }
   }
   let lastErr=null;
   for(const a of attempts){
     try{
-      const j = await fetchJson(omUrl(a.id, a.vars, a.elev));
+      const j = await fetchJson(omUrl(a.id, a.vars, a.elev, a.past));
       const arr = Array.isArray(j)?j:[j];
       if(arr.length!==LOCATIONS.length) throw new Error('location count mismatch');
-      const data = {ok:true, data:arr.map(x=>({elev:x.elevation, offset:x.utc_offset_seconds, h:normaliseUnits(x.hourly, x.hourly_units), units:x.hourly_units})), note:a.note, usedId:a.id};
+      const data = {ok:true, data:arr.map(x=>({elev:x.elevation, offset:x.utc_offset_seconds, h:normaliseUnits(x.hourly, x.hourly_units), units:x.hourly_units})), note:a.note, usedId:a.id, pastDays:a.past};
       state.models[m.id] = Object.assign({fetchedAt:Date.now()}, data);
       cacheSet(key, data);
       return;
@@ -137,11 +142,11 @@ function computeAll(){
       // align by time
       const map = new Map(h.time.map((t,i)=>[t,i]));
       const snow = new Array(n).fill(null), liq=new Array(n).fill(null), slr=new Array(n).fill(null);
-      let cover=0;
-      for(let i=0;i<n;i++){ const j=map.get(times[i]); if(j==null) continue; const s=adjustedSnow(loc,h,j); if(s!=null){ snow[i]=s; cover++; } liq[i]= h.precipitation? h.precipitation[j] : null; slr[i]= (h.snowfall&&h.snowfall[j]>0)? slrFor(loc,h,j) : null; }
-      const tot = (a,b)=>{ let s=0, any=false; for(let i=a;i<Math.min(b,n);i++){ if(snow[i]!=null){ s+=snow[i]; any=true; } } return any? s : null; };
-      perModel[m.id] = { snow, liq, slr, cover, full: cover >= n-2, h, map,
-        d1: tot(startIdx, startIdx+24), d3: tot(startIdx, startIdx+72), d7: tot(startIdx, n) };
+      let cover=0, pastCover=0;
+      for(let i=0;i<n;i++){ const j=map.get(times[i]); if(j==null) continue; const s=adjustedSnow(loc,h,j); if(s!=null){ snow[i]=s; if(i>=startIdx) cover++; else pastCover++; } liq[i]= h.precipitation? h.precipitation[j] : null; slr[i]= (h.snowfall&&h.snowfall[j]>0)? slrFor(loc,h,j) : null; }
+      const tot = (a,b)=>{ let s=0, any=false; for(let i=Math.max(0,a);i<Math.min(b,n);i++){ if(snow[i]!=null){ s+=snow[i]; any=true; } } return any? s : null; };
+      perModel[m.id] = { snow, liq, slr, cover, pastCover, full: cover >= (n-startIdx)-2, hasPast: pastCover>=24, h, map,
+        d1: tot(startIdx, startIdx+24), d3: tot(startIdx, startIdx+72), d7: tot(startIdx, n), p1: tot(startIdx-24, startIdx), p3: tot(startIdx-72, startIdx) };
     }
     // blend
     const blendIds = (()=>{ const bm=state.prefs.blendMode; if(bm==='mean'||bm==='median') return Object.keys(perModel).filter(id=>perModel[id].full); return perModel[bm]? [bm] : Object.keys(perModel).filter(id=>perModel[id].full); })();
@@ -151,6 +156,8 @@ function computeAll(){
     const fullIds = Object.keys(perModel).filter(id=>perModel[id].full);
     const totals7 = fullIds.map(id=>perModel[id].d7).filter(v=>v!=null);
     const d7 = sum(blend,startIdx,n), d3=sum(blend,startIdx,startIdx+72), d1=sum(blend,startIdx,startIdx+24);
+    const pastIdx0=Math.max(0,startIdx-72); const p1=sum(blend,Math.max(0,startIdx-24),startIdx), p3=sum(blend,pastIdx0,startIdx); const pastLiq3=sum(blendLiq,pastIdx0,startIdx);
+    const hasPast = startIdx>=24;
     const mn = totals7.length? Math.min(...totals7):null, mx = totals7.length? Math.max(...totals7):null;
     const rel = (mx!=null && d7>0)? (mx-mn)/Math.max(d7,1) : 0;
     const conf = d7<1 ? {t:'dry', cls:'neutral', rel} : rel<0.5 ? {t:'high', cls:'high', rel} : rel<1.0 ? {t:'medium', cls:'med', rel} : {t:'low', cls:'low', rel};
@@ -184,6 +191,7 @@ function computeAll(){
       }
       days.push({d, t:first, label:fmtDay(first), blend:bl, liq, byModel, flow, rh, t700, t2, fzl, slr:slrM, snowHours, peak, peakT, gust, h500, fit: flow? fitScore(loc, flow.dir, flow.steady, flow.spd) : null});
     }
+    const pastDays=[]; if(hasPast){ const pu=[...new Set(dayOf.slice(pastIdx0,startIdx))]; for(const d of pu){ const idx=[]; for(let i=pastIdx0;i<startIdx;i++) if(dayOf[i]===d) idx.push(i); const bl=idx.reduce((s,i)=>s+(blend[i]||0),0); const liq=idx.reduce((s,i)=>s+(blendLiq[i]||0),0); const byModel={}; for(const id in perModel){ const pm=perModel[id]; let t=0,any=false; idx.forEach(i=>{ if(pm.snow[i]!=null){ t+=pm.snow[i]; any=true; } }); byModel[id]=any?t:null; } pastDays.push({d, t:times[idx[0]], label:fmtDay(times[idx[0]]), blend:bl, liq, byModel, past:true, hours:idx.length}); } }
     // overall flow during snow (precip-weighted over 7 days)
     const wDays = days.map(x=>x.blend+0.01);
     const flow7 = days.some(x=>x.flow)? vecMean(days.map(x=>x.flow?x.flow.dir:null), days.map(x=>x.flow?x.flow.spd:null), wDays) : null;
@@ -204,7 +212,7 @@ function computeAll(){
     const slr3 = (()=>{ let s=0,W=0; days.slice(0,3).forEach(x=>{ if(x.slr==null) return; s+=x.slr*x.blend; W+=x.blend; }); return W? s/W : null; })();
     const powder = { snow: Math.min(1, d3/18)*45, ratio: slr3==null? 10 : Math.max(0,Math.min(1,(slr3-8)/10))*20, wind: gustIn3==null? 8 : gustIn3<25? 15 : gustIn3<40? 8 : 0, conf: conf.cls==='high'?12:conf.cls==='med'?7:conf.cls==='neutral'?4:2, fit: fit7==null? 4 : (fit7+1)/2*8 };
     powder.total = Math.round(powder.snow+powder.ratio+powder.wind+powder.conf+powder.fit); powder.gust=gustIn3; powder.slr3=slr3;
-    state.derived[loc.id] = {times, startIdx, n, perModel, blend, blendLiq, d1, d3, d7, liq7, mn, mx, conf, days, flow7, fit7, slr7, t7000, fzl7, rh7, wet, dry, presSrc, nModels: fullIds.length, trough, gust7, powder, pres};
+    state.derived[loc.id] = {times, startIdx, n, perModel, blend, blendLiq, d1, d3, d7, liq7, mn, mx, conf, days, flow7, fit7, slr7, t7000, fzl7, rh7, wet, dry, presSrc, nModels: fullIds.length, trough, gust7, powder, pres, p1, p3, pastLiq3, pastDays, pastIdx0, hasPast};
   });
 }
 

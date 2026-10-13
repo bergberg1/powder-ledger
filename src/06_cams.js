@@ -61,10 +61,11 @@ function renderCamsTab(){
   camTimers.forEach(t=>clearInterval(t)); camTimers.length=0; buildRegistry();
   state.camRegion=state.camRegion||''; state.route=state.route||'';
   // route bar
-  $('#routeBar').innerHTML = `<button class="chip" aria-pressed="${!state.route}" data-r="">All cams</button>`+ROUTES.map(r=>`<button class="chip" aria-pressed="${state.route===r.id}" data-r="${r.id}">${esc(r.name)}</button>`).join('');
+  $('#routeBar').innerHTML = `<button class="chip" aria-pressed="${!state.route}" data-r="">All cams</button><button class="chip" aria-pressed="${state.route==='pinned'}" data-r="pinned">★ Pinned</button>`+ROUTES.map(r=>`<button class="chip" aria-pressed="${state.route===r.id}" data-r="${r.id}">${esc(r.name)}</button>`).join('');
   $$('#routeBar .chip').forEach(b=>b.onclick=()=>{ state.route=b.dataset.r; renderCamsTab(); });
   const route=ROUTES.find(r=>r.id===state.route);
-  if(route){ const stops=route.stops.map(([frag,mi])=>({c:camRegistry.find(x=>x._kind==='pass'&&x.name.includes(frag)), mi})).filter(x=>x.c); const dest=route.dest.flatMap(id=>camRegistry.filter(x=>x._kind==='resort'&&x._loc[0]===id)).slice(0,6);
+  if(state.route==='pinned'){ const favs=state.prefs.favs||[]; const list=camRegistry.filter(c=>(c._loc&&favs.includes(c._loc[0]))||(c.near||[]).some(id=>favs.includes(id))); $('#routeStrip').innerHTML=`<div class="routeStrip"><div class="rsHead"><b>★ Pinned mountains</b><span class="wallSub">${favs.length?'resort cams and the road cams on the way':'pin mountains on the Overview tab to collect their cams here'}</span></div><div class="camGrid">${list.map(c=>camCard(c, camRegistry.indexOf(c))).join('')}</div></div>`; }
+  else if(route){ const stops=route.stops.map(([frag,mi])=>({c:camRegistry.find(x=>x._kind==='pass'&&x.name.includes(frag)), mi})).filter(x=>x.c); const dest=route.dest.flatMap(id=>camRegistry.filter(x=>x._kind==='resort'&&x._loc[0]===id)).slice(0,6);
     const dl=route.dest.map(id=>LOCATIONS.find(l=>l.id===id)).filter(Boolean); const fc=dl.map(l=>{ const D=state.derived[l.id]; return D? `${l.short||l.name} ${inch(D.d1)}"` : null; }).filter(Boolean).join(' · ');
     $('#routeStrip').innerHTML=`<div class="routeStrip"><div class="rsHead"><b>${esc(route.name)}</b><span class="wallSub">road cams in driving order from ${esc(route.from)}, then the destination${fc?` · next 24 h: ${fc}`:''}</span></div><div class="road">${stops.map(s=>`<div class="stop"><div class="mile"><i></i>mile ${s.mi}</div>${camCard(s.c, camRegistry.indexOf(s.c))}</div>`).join('')}${dest.map(c=>`<div class="stop dest"><div class="mile"><i></i>destination</div>${camCard(c, camRegistry.indexOf(c))}</div>`).join('')}</div></div>`; }
   else $('#routeStrip').innerHTML='';

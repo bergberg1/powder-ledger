@@ -13,6 +13,8 @@ function renderSources(){
     <dt>Powder score</dt><dd>A 0–100 ranking for the next three days that combines how much snow (45 points), how fluffy (20), how windy (15), how much the models agree (12) and whether the terrain lines up with the wind (8). 70+ means go; 50–70 means plan around the best morning; under 30 means wait.</dd>
     <dt>Ensemble</dt><dd>The same model run 30–50 times with tiny differences in the starting conditions. The band it draws shows the realistic range of outcomes. A narrow band means confidence; a wide band means the atmosphere is in a touchy state and any single forecast could be wrong.</dd>
     <dt>Gusts</dt><dd>Peak wind at the surface. Above about 40 mph, upper lifts go on wind hold and ridgelines get scoured; the best snow will be in sheltered trees.</dd>
+    <dt>Last 24 h / Last 3 days</dt><dd>What the models think already fell, using their own recent runs (the same data the forecast comes from, just for the hours that have passed). It is an estimate, not a measurement. Each mountain's detail shows the nearest SNOTEL gauge's measured depth change beside it; when they disagree, trust the gauge.</dd>
+    <dt>Pins</dt><dd>Tap the ★ on any row or in a mountain's detail. Pinned mountains appear in a strip at the top of the Overview, a ★ Pinned filter shows only them, and the cams tab collects their cameras. Pins are saved in this browser only.</dd>
     <dt>Blend</dt><dd>The headline number is the average of the global models. Switch it to a single model if you have a favorite; ECMWF is usually the most skillful, GFS updates most often.</dd>
   </dl>
   <h2 style="margin-top:22px">How to read this dashboard</h2>
@@ -88,8 +90,8 @@ function renderSources(){
 
 /* ===================== Boot ===================== */
 function applyTheme(){ const t=state.prefs.theme; if(t) document.documentElement.setAttribute('data-theme',t); else document.documentElement.removeAttribute('data-theme'); }
-function renderAll(){ renderHero(); renderStats(); renderLedger(); renderMapDays(); renderMap(); renderPattern(); renderStrips(); renderCompare(); }
-function renderRegionChips(){ const regs=[...new Set(LOCATIONS.map(l=>l.region))]; $('#regionChips').innerHTML=regs.map(r=>`<button class="chip" aria-pressed="${state.regions.has(r)}" data-r="${esc(r)}">${esc(r)}</button>`).join(''); $$('#regionChips .chip').forEach(c=>c.onclick=()=>{ const r=c.dataset.r; if(state.regions.has(r)) state.regions.delete(r); else state.regions.add(r); renderRegionChips(); renderAll(); }); }
+function renderAll(){ renderHero(); renderPinned(); renderStats(); renderLedger(); renderMapDays(); renderMap(); renderPattern(); renderStrips(); renderCompare(); }
+function renderRegionChips(){ const regs=[...new Set(LOCATIONS.map(l=>l.region))]; $('#regionChips').innerHTML=`<button class="chip" id="chipFav" aria-pressed="${!!state.favOnly}" title="Show only pinned mountains">★ Pinned${(state.prefs.favs||[]).length?' ('+state.prefs.favs.length+')':''}</button>`+regs.map(r=>`<button class="chip" aria-pressed="${state.regions.has(r)}" data-r="${esc(r)}">${esc(r)}</button>`).join(''); $$('#regionChips .chip[data-r]').forEach(c=>c.onclick=()=>{ const r=c.dataset.r; if(state.regions.has(r)) state.regions.delete(r); else state.regions.add(r); renderRegionChips(); renderAll(); }); $('#chipFav').onclick=()=>{ state.favOnly=!state.favOnly; renderRegionChips(); renderAll(); }; }
 function showNotices(){
   const bad=MODELS.filter(m=>state.models[m.id]&&!state.models[m.id].ok&&!m.optional); const opt=MODELS.filter(m=>m.optional&&state.models[m.id]&&!state.models[m.id].ok);
   const notes=MODELS.filter(m=>state.models[m.id]&&state.models[m.id].ok&&state.models[m.id].note).map(m=>`${m.short}: ${state.models[m.id].note}`);

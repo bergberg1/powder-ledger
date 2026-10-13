@@ -203,6 +203,44 @@ details summary{cursor:pointer;color:var(--accent-ink);font-weight:500}
 .nerd td.hot{background:color-mix(in srgb,var(--seq4) 22%,transparent);font-weight:600}
 .dim{opacity:.55}
 footer{color:var(--fg-3);font-size:12px;padding-block:20px}
+.mapStage{position:relative;perspective:1100px;perspective-origin:50% 30%;overflow:hidden;border-radius:10px;touch-action:none;user-select:none}
+.mapPlane{position:relative;transform-style:preserve-3d;transition:transform .6s ease;transform-origin:50% 60%}
+.mapStage.is3d .mapPlane{transform:rotateX(56deg) rotateZ(-6deg) scale(1.08)}
+@media (prefers-reduced-motion:reduce){.mapPlane{transition:none}}
+.mapStage svg{cursor:grab} .mapStage.dragging svg{cursor:grabbing}
+.mapCtl{position:absolute;top:8px;right:8px;display:flex;flex-direction:column;gap:4px;z-index:5}
+.mapCtl .btn{width:30px;height:30px;padding:0;font-size:16px;line-height:1;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--panel) 85%,transparent);backdrop-filter:blur(4px)}
+.mapCtl .btn[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
+#mapBars{position:absolute;inset:0;pointer-events:none;transform-style:preserve-3d}
+.bar3d{position:absolute;width:14px;transform-origin:50% 100%;transform:translate(-50%,0) rotateX(-56deg);background:linear-gradient(180deg,var(--seq7),var(--seq4));border:1px solid rgba(255,255,255,.35);border-radius:3px 3px 0 0;box-shadow:0 0 12px rgba(42,120,214,.35);transition:height .45s ease,top .45s ease;pointer-events:none}
+.bar3d b{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);font-family:var(--display);font-size:12px;font-weight:700;color:var(--fg);white-space:nowrap;padding-bottom:2px;text-shadow:0 1px 3px var(--panel)}
+.bar3d.pinned{background:linear-gradient(180deg,#f5b800,#c98500);box-shadow:0 0 12px rgba(245,184,0,.45)}
+#mapPopup{position:absolute;z-index:6;background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);padding:10px 12px;min-width:200px;max-width:260px;font-size:12px;transform:translate(-50%,calc(-100% - 14px));transform-origin:50% 100%}
+.mapStage.is3d #mapPopup{transform:translate(-50%,calc(-100% - 14px)) rotateZ(6deg) rotateX(-56deg)}
+#mapPopup::after{content:"";position:absolute;left:50%;top:100%;transform:translateX(-50%);border:7px solid transparent;border-top-color:var(--panel)}
+#mapPopup h3{font-size:17px;margin-bottom:2px}
+#mapPopup .row{display:flex;justify-content:space-between;gap:8px;margin-top:3px}
+#mapPopup .row b{font-family:var(--display);font-size:15px}
+#mapPopup .acts{display:flex;gap:6px;margin-top:8px}
+.mapStage.is3d .mapbg{fill:var(--panel-2)}
+.star{border:0;background:none;cursor:pointer;font-size:18px;line-height:1;color:var(--fg-3);padding:2px 4px;border-radius:4px}
+.star[aria-pressed="true"]{color:#f5b800;text-shadow:0 0 6px rgba(245,184,0,.5)}
+.star:hover{color:#f5b800}
+.pinnedWrap{margin-top:14px}
+.pinnedHead{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.pinnedHead h2{margin:0}
+.pinGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.pin{background:var(--panel);border:1px solid var(--line);border-left:4px solid #f5b800;border-radius:10px;padding:10px 12px;cursor:pointer;min-width:0;transition:transform .15s,box-shadow .15s;position:relative}
+.pin:hover{transform:translateY(-2px);box-shadow:var(--shadow-sm)}
+.pin .name{font-family:var(--display);font-size:19px;font-weight:700}
+.pin .nums{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px}
+.pin .nums div{font-family:var(--display);font-size:22px;font-weight:700;line-height:1}
+.pin .nums span{display:block;font-family:var(--body);font-size:10px;color:var(--fg-3);text-transform:uppercase;letter-spacing:.08em;margin-top:2px;font-weight:600}
+.pin .nums .past div{color:var(--fg-2)}
+.pin .star{position:absolute;top:6px;right:6px}
+.pin .pills{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.pastCell{color:var(--fg-2)}
+.emptyPins{font-size:13px;color:var(--fg-3);background:var(--panel);border:1px dashed var(--line);border-radius:10px;padding:10px 12px}
 /* cam wall: a deliberately dark control-room surface in both themes */
 .wall{--wbg:#070b12;--wpanel:#0f1623;--wline:#1f2a3b;--wfg:#e6eef8;--wfg2:#9fb0c6;--wfg3:#6b7c93;--waccent:#5aa2ff;background:var(--wbg);color:var(--wfg);border-radius:14px;padding:16px;border:1px solid var(--wline);box-shadow:var(--shadow-sm);color-scheme:dark}
 .wallHead{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px}
@@ -326,6 +364,7 @@ footer{color:var(--fg-3);font-size:12px;padding-block:20px}
 
   <section id="tab-overview" role="tabpanel">
     <div class="hero" id="heroWrap"><canvas id="heroArt" aria-hidden="true"></canvas><div id="hero"></div></div>
+    <div id="pinned"></div>
     <div class="bets" id="bets"></div>
     <div class="stats" id="stats"></div>
     <div class="grid two">
@@ -336,7 +375,7 @@ footer{color:var(--fg-3);font-size:12px;padding-block:20px}
         <div class="card mapWrap">
           <h2>Where it falls, and which way the air is moving</h2>
           <div class="daysel" id="mapDays"></div>
-          <div id="map"></div>
+          <div class="mapStage" id="mapStage"><div class="mapPlane" id="mapPlane"><div id="map"></div><div id="mapBars"></div><div id="mapPopup" hidden></div></div><div class="mapCtl" id="mapCtl"><button class="btn sm" id="mapZoomIn" title="Zoom in">+</button><button class="btn sm" id="mapZoomOut" title="Zoom out">−</button><button class="btn sm" id="mapReset" title="Reset view">⟲</button><button class="btn sm" id="map3d" title="Tilt the map and raise snowfall columns">3D</button></div></div>
           <div class="legendRow" id="mapLegend"></div>
         </div>
         <div class="card" style="margin-top:16px">
