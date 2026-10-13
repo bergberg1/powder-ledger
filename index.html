@@ -1,0 +1,1283 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Powder Ledger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a topographic ledger. A storm headline band on top, one filter row, then a ranked table beside an
+   animated storm-track map; a sliding drawer explains the physics behind each mountain's number. */
+:root{
+  --bg:#edf1f5; --panel:#ffffff; --panel-2:#e5ebf2; --panel-3:#f6f8fb; --fg:#0f1826; --fg-2:#46536a; --fg-3:#7b8798;
+  --line:#d3dbe5; --line-2:#e4e9f0; --accent:#1d6fd6; --accent-soft:#dbe8fa; --accent-ink:#0b3f85;
+  --hero-a:#0d2544; --hero-b:#1b5fb8; --hero-c:#5ea8ff; --hero-fg:#f4f8ff; --hero-muted:rgba(244,248,255,.72);
+  --good:#0ca30c; --warn:#fab219; --serious:#ec835a; --bad:#d03b3b;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100; --s5:#e87ba4; --s6:#008300; --s7:#6250d6; --s8:#e34948;
+  --seq1:#d6e6fb; --seq2:#a9cbf6; --seq3:#78adef; --seq4:#3f8be6; --seq5:#276ec3; --seq6:#17519a; --seq7:#0c3568;
+  --surface:#fcfcfb; --grid:#e1e0d9; --axis:#c3c2b7; --road:#b9c4d2; --range:#8a98ab;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --radius:8px; --shadow:0 10px 40px rgba(15,24,38,.16); --shadow-sm:0 1px 2px rgba(15,24,38,.06),0 4px 14px rgba(15,24,38,.05);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --bg:#0a0f17; --panel:#121a26; --panel-2:#1b2533; --panel-3:#0f1620; --fg:#e7edf5; --fg-2:#aeb9c8; --fg-3:#7a8798;
+  --line:#26313f; --line-2:#1d2734; --accent:#5aa2ff; --accent-soft:#17304f; --accent-ink:#a9cdff;
+  --hero-a:#071427; --hero-b:#10396f; --hero-c:#2f7fe0; --hero-fg:#f4f8ff; --hero-muted:rgba(244,248,255,.7);
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#008300; --s7:#9085e9; --s8:#e66767;
+  --seq1:#13293f; --seq2:#193d63; --seq3:#20538a; --seq4:#2b6db3; --seq5:#3b88d8; --seq6:#6aa8ec; --seq7:#a6cdf7;
+  --surface:#1a1a19; --grid:#2c2c2a; --axis:#383835; --road:#2c3a4c; --range:#5d6b7d;
+  --shadow:0 10px 40px rgba(0,0,0,.55); --shadow-sm:0 1px 2px rgba(0,0,0,.4);
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0a0f17; --panel:#121a26; --panel-2:#1b2533; --panel-3:#0f1620; --fg:#e7edf5; --fg-2:#aeb9c8; --fg-3:#7a8798;
+  --line:#26313f; --line-2:#1d2734; --accent:#5aa2ff; --accent-soft:#17304f; --accent-ink:#a9cdff;
+  --hero-a:#071427; --hero-b:#10396f; --hero-c:#2f7fe0; --hero-fg:#f4f8ff; --hero-muted:rgba(244,248,255,.7);
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#008300; --s7:#9085e9; --s8:#e66767;
+  --seq1:#13293f; --seq2:#193d63; --seq3:#20538a; --seq4:#2b6db3; --seq5:#3b88d8; --seq6:#6aa8ec; --seq7:#a6cdf7;
+  --surface:#1a1a19; --grid:#2c2c2a; --axis:#383835; --road:#2c3a4c; --range:#5d6b7d;
+  --shadow:0 10px 40px rgba(0,0,0,.55); --shadow-sm:0 1px 2px rgba(0,0,0,.4);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:14px;line-height:1.45}
+body{padding-block:0 56px}
+a{color:var(--accent-ink)}
+button,select,input{font:inherit;color:inherit}
+.wrap{padding-inline:16px;max-width:1540px;margin:0 auto}
+h1,h2,h3{font-family:var(--display);font-weight:600;letter-spacing:.01em;margin:0;text-wrap:balance}
+h1{font-size:30px;line-height:1}
+h2{font-size:19px;text-transform:uppercase;letter-spacing:.07em;color:var(--fg-2)}
+h3{font-size:17px}
+.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:var(--fg-3);font-weight:600}
+.mono{font-family:var(--mono)} .num{font-variant-numeric:tabular-nums} .muted{color:var(--fg-3)} .small{font-size:12px}
+/* top bar */
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--panel) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+header.top .wrap{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding-block:10px}
+.brand{display:flex;align-items:baseline;gap:10px}
+.brand h1{font-weight:800;letter-spacing:.02em;font-size:28px}
+.brand .sub{color:var(--fg-3);font-size:12px}
+.status{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:12px;color:var(--fg-2);flex-wrap:wrap}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--fg-3)}
+.dot.ok{background:var(--good)} .dot.warn{background:var(--warn)} .dot.bad{background:var(--bad)} .dot.busy{background:var(--accent);animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.3}}
+.btn{border:1px solid var(--line);background:var(--panel);border-radius:var(--radius);padding:6px 10px;cursor:pointer;font-size:13px;transition:background .15s,transform .1s}
+.btn:hover{background:var(--panel-2)} .btn:active{transform:translateY(1px)}
+.btn:focus-visible,select:focus-visible,input:focus-visible,.row:focus-visible,.chip:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.sm{padding:3px 8px;font-size:12px}
+.loadbar{height:3px;background:transparent;overflow:hidden;position:relative}
+.loadbar i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,var(--accent),var(--hero-c));width:0;transition:width .3s}
+nav.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-top:10px;overflow-x:auto}
+nav.tabs button{border:0;background:none;padding:10px 12px;cursor:pointer;color:var(--fg-2);border-bottom:2px solid transparent;font-family:var(--display);font-size:16px;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;font-weight:600}
+nav.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+.filters{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding-block:12px}
+.filters label{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--fg-2)}
+.filters input[type=search]{border:1px solid var(--line);border-radius:var(--radius);padding:7px 10px 7px 30px;background:var(--panel) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237b8798' stroke-width='2'><circle cx='11' cy='11' r='7'/><path d='m20 20-4-4'/></svg>") 9px center/14px no-repeat;min-width:220px}
+.filters select{border:1px solid var(--line);border-radius:var(--radius);padding:5px 8px;background:var(--panel)}
+.filters input[type=range]{width:120px;accent-color:var(--accent)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:3px 10px;font-size:12px;cursor:pointer;color:var(--fg-2);text-decoration:none}
+.chip[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-ink)}
+/* hero */
+.hero{position:relative;overflow:hidden;border-radius:12px;background:linear-gradient(118deg,var(--hero-a) 0%,var(--hero-b) 62%,var(--hero-c) 130%);color:var(--hero-fg);padding:20px 22px;margin-top:4px;box-shadow:var(--shadow-sm)}
+.hero::before{content:"";position:absolute;inset:0;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='300' viewBox='0 0 600 300' fill='none' stroke='white' stroke-opacity='0.13' stroke-width='1'><path d='M-20 220c80-60 140-20 220-50s120-90 220-70 160 60 200 40'/><path d='M-20 250c80-60 140-20 220-50s120-90 220-70 160 60 200 40'/><path d='M-20 280c80-60 140-20 220-50s120-90 220-70 160 60 200 40'/><path d='M-20 190c80-60 140-20 220-50s120-90 220-70 160 60 200 40'/><path d='M-20 160c80-60 140-20 220-50s120-90 220-70 160 60 200 40'/><path d='M-20 130c80-60 140-20 220-50s120-90 220-70 160 60 200 40'/><path d='M-20 100c80-60 140-20 220-50s120-90 220-70 160 60 200 40'/><path d='M-20 70c80-60 140-20 220-50s120-90 220-70 160 60 200 40'/><path d='M-20 40c80-60 140-20 220-50s120-90 220-70 160 60 200 40'/></svg>") repeat;opacity:1;pointer-events:none}
+.hero canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+.hero>*{position:relative;z-index:1}
+.hero #hero{min-height:150px}
+.hero .eyebrow{color:var(--hero-muted)}
+.hero h1{font-size:clamp(28px,3.6vw,46px);text-shadow:0 2px 18px rgba(0,0,0,.35);font-weight:700;line-height:1.05;margin-top:4px;max-width:28ch}
+.hero p{margin:8px 0 0;color:var(--hero-muted);max-width:80ch;font-size:14px;text-shadow:0 1px 8px rgba(0,0,0,.35)}
+.hero .grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:20px}
+@media (max-width:900px){.hero .grid{grid-template-columns:1fr}}
+.hero .windows{display:grid;gap:8px;align-content:start}
+.hero .win{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:8px 10px;font-size:12px;backdrop-filter:blur(4px)}
+.hero .win b{font-family:var(--display);font-size:15px;letter-spacing:.02em}
+.hero .win .r{color:var(--hero-muted)}
+.bets{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin-top:14px}
+.bet{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;cursor:pointer;transition:transform .15s,box-shadow .15s;min-width:0}
+.bet:hover{transform:translateY(-2px);box-shadow:var(--shadow-sm)}
+.bet .rank{font-family:var(--display);font-size:11px;letter-spacing:.14em;color:var(--fg-3);text-transform:uppercase}
+.bet h3{font-size:20px;margin-top:2px}
+.bet .nums{display:flex;gap:14px;align-items:flex-end;margin-top:6px}
+.bet .big{font-family:var(--display);font-size:34px;font-weight:700;line-height:1}
+.bet .big small{font-size:13px;font-weight:500;color:var(--fg-3);font-family:var(--body)}
+.bet .reason{font-size:12px;color:var(--fg-2);margin-top:8px;line-height:1.4}
+.bet .pills{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.spark{display:inline-block;vertical-align:middle}
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px;margin-block:14px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:10px 12px;min-width:0;box-shadow:var(--shadow-sm)}
+.stat .label{font-size:12px;color:var(--fg-2)}
+.stat .value{font-family:var(--display);font-size:30px;font-weight:700;line-height:1.05;margin-top:2px}
+.stat .value small{font-size:13px;font-weight:500;color:var(--fg-3);font-family:var(--body)}
+.stat .sub{font-size:12px;color:var(--fg-3);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* layout */
+.grid{display:grid;gap:16px}
+.grid.two{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr)}
+@media (max-width:1000px){.grid.two{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;min-width:0;box-shadow:var(--shadow-sm)}
+.card h2{margin-bottom:8px}
+/* ledger */
+table.ledger{width:100%;border-collapse:collapse;font-size:13px}
+table.ledger th{position:sticky;top:0;background:var(--panel);text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--fg-3);font-weight:600;padding:9px 6px;border-bottom:1px solid var(--line);cursor:pointer;white-space:nowrap;user-select:none;z-index:1}
+table.ledger th.num,table.ledger td.num{text-align:right}
+table.ledger th[aria-sort]{color:var(--accent-ink)} table.ledger th[aria-sort]::after{content:" ▴"} table.ledger th[aria-sort="descending"]::after{content:" ▾"}
+table.ledger td{padding:8px 6px;border-bottom:1px solid var(--line-2);vertical-align:middle}
+table.ledger td:first-child{min-width:150px}
+table.ledger tr.row{cursor:pointer} table.ledger tr.row:hover td{background:var(--panel-3)}
+table.ledger tr.row[aria-selected="true"] td{background:var(--accent-soft)}
+.name{font-weight:600} .name .st{color:var(--fg-3);font-weight:400;font-size:12px;margin-left:4px}
+.region{color:var(--fg-3);font-size:12px}
+.range{color:var(--fg-3);font-size:11px;white-space:nowrap}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;white-space:nowrap;border:1px solid transparent}
+.pill.high{background:color-mix(in srgb,var(--good) 15%,transparent);color:var(--fg);border-color:color-mix(in srgb,var(--good) 50%,transparent)}
+.pill.med{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--fg);border-color:color-mix(in srgb,var(--warn) 60%,transparent)}
+.pill.low{background:color-mix(in srgb,var(--bad) 14%,transparent);color:var(--fg);border-color:color-mix(in srgb,var(--bad) 50%,transparent)}
+.pill.neutral{background:var(--panel-2);color:var(--fg-2)}
+.fit{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.fit .arrow{display:inline-block;width:14px;height:14px}
+.meter{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.meter i{display:inline-block;width:46px;height:6px;border-radius:3px;background:var(--panel-2);position:relative;overflow:hidden}
+.meter i b{position:absolute;left:0;top:0;bottom:0;border-radius:3px;background:linear-gradient(90deg,var(--seq4),var(--seq7))}
+.tableWrap{overflow-x:auto;max-height:74vh;overflow-y:auto;border-radius:10px}
+/* map */
+.mapWrap svg{width:100%;height:auto;display:block}
+.mapWrap .mapbg{fill:var(--panel-3)}
+.legendRow{display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--fg-2);margin-top:8px}
+.legendRow .sw{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin-right:4px}
+.legendRow .ln{display:inline-block;width:16px;height:2px;vertical-align:3px;margin-right:4px;border-radius:1px}
+.daysel{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;align-items:center}
+.daysel button{border:1px solid var(--line);background:var(--panel);border-radius:var(--radius);padding:4px 8px;font-size:12px;cursor:pointer;color:var(--fg-2)}
+.daysel button[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-ink)}
+.daysel button.play{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
+.tip{position:fixed;z-index:50;pointer-events:none;background:var(--panel);color:var(--fg);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:var(--radius);padding:8px 10px;font-size:12px;max-width:300px;display:none}
+.tip b{font-size:14px}
+.tip .k{display:inline-block;width:14px;height:2px;vertical-align:3px;margin-right:5px;border-radius:1px}
+/* drawer */
+.drawer{position:fixed;inset:0 0 0 auto;width:min(1040px,100%);background:var(--bg);z-index:30;transform:translateX(102%);transition:transform .25s ease;overflow-y:auto;box-shadow:var(--shadow);border-left:1px solid var(--line)}
+.drawer.open{transform:none}
+.drawer .inner{padding:16px;padding-top:calc(16px + env(safe-area-inset-top,0px))}
+.drawer .head{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;position:sticky;top:0;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(8px);padding-block:8px;z-index:2;border-bottom:1px solid var(--line);margin-bottom:12px}
+.drawer .head h1{font-size:30px;font-weight:700}
+.facts{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--fg-2)}
+.facts b{color:var(--fg)}
+.scrim{position:fixed;inset:0;background:rgba(6,10,16,.45);z-index:25;display:none}
+.scrim.on{display:block}
+.why{border-left:3px solid var(--accent);padding:12px 14px;background:var(--panel);border-radius:0 10px 10px 0;line-height:1.55;box-shadow:var(--shadow-sm)}
+.why p{margin:0 0 8px} .why p:last-child{margin:0}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:13px}
+.kv dt{color:var(--fg-3)} .kv dd{margin:0}
+.twocol{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.twocol{grid-template-columns:1fr}}
+pre.afd{white-space:pre-wrap;font-family:var(--mono);font-size:12px;line-height:1.5;background:var(--panel-3);padding:12px;border-radius:var(--radius);max-height:440px;overflow:auto;margin:0;border:1px solid var(--line-2)}
+pre.afd mark{background:color-mix(in srgb,var(--warn) 45%,transparent);color:inherit;padding:0 2px;border-radius:2px}
+details summary{cursor:pointer;color:var(--accent-ink);font-weight:500}
+.stripes{display:grid;gap:4px}
+.strip{display:grid;grid-template-columns:160px 1fr;gap:8px;align-items:center;font-size:12px}
+.strip .lab{color:var(--fg-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.strip .cells{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:1px;height:16px}
+.strip .cells i{display:block;background:var(--seq1);border-radius:1px}
+.strip.hd .lab{font-family:var(--display);text-transform:uppercase;letter-spacing:.1em;font-size:11px}
+@media (max-width:600px){.strip{grid-template-columns:110px 1fr}}
+.sources h3{margin-top:18px;margin-bottom:4px}
+.sources p,.sources li{max-width:76ch}
+.srcTable{width:100%;border-collapse:collapse;font-size:13px}
+.srcTable th,.srcTable td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line-2);vertical-align:top}
+.srcTable th{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--fg-3)}
+.notice{background:color-mix(in srgb,var(--warn) 14%,var(--panel));border:1px solid color-mix(in srgb,var(--warn) 50%,transparent);padding:10px 12px;border-radius:var(--radius);font-size:13px;margin-block:10px}
+.err{background:color-mix(in srgb,var(--bad) 10%,var(--panel));border:1px solid color-mix(in srgb,var(--bad) 40%,transparent);padding:10px 12px;border-radius:var(--radius);font-size:13px;margin-block:10px}
+.cmpTable td,.cmpTable th{padding:5px 8px;border-bottom:1px solid var(--line-2);font-size:13px;text-align:left}
+.cmpTable th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--fg-3)}
+.cmpTable td.num{text-align:right}
+.nerd{font-family:var(--mono);font-size:11px;border-collapse:collapse;white-space:nowrap}
+.nerd th{position:sticky;top:0;background:var(--panel);font-family:var(--body);font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--fg-3);padding:4px 6px;border-bottom:1px solid var(--line);text-align:right}
+.nerd th:first-child,.nerd td:first-child{text-align:left}
+.nerd td{padding:2px 6px;border-bottom:1px solid var(--line-2);text-align:right}
+.nerd tr.day td{border-top:2px solid var(--line)}
+.nerd td.hot{background:color-mix(in srgb,var(--seq4) 22%,transparent);font-weight:600}
+.dim{opacity:.55}
+footer{color:var(--fg-3);font-size:12px;padding-block:20px}
+@media (prefers-reduced-motion:reduce){.dot.busy,.bet,.drawer,.btn{animation:none;transition:none}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="brand"><h1>Powder Ledger</h1><span class="sub">Colorado · Utah · nearby ranges — 7-day snow, and the reasons behind the numbers</span></div>
+    <div class="status">
+      <span id="stLight" class="dot"></span><span id="stText">Loading…</span>
+      <button class="btn sm" id="btnRefresh" title="Fetch new model runs (ignores the 30-minute cache)">Refresh data</button>
+      <button class="btn sm" id="btnTheme" title="Toggle light/dark">Theme</button>
+    </div>
+  </div>
+  <div class="loadbar"><i id="loadbar"></i></div>
+</header>
+<div class="wrap">
+  <nav class="tabs" role="tablist">
+    <button role="tab" aria-selected="true" data-tab="overview">Overview</button>
+    <button role="tab" aria-selected="false" data-tab="storms">Storm timing</button>
+    <button role="tab" aria-selected="false" data-tab="compare">Compare</button>
+    <button role="tab" aria-selected="false" data-tab="sources">Data &amp; methods</button>
+  </nav>
+  <div class="filters" id="filters">
+    <input type="search" id="q" placeholder="Search mountain, region, pass…" aria-label="Search locations">
+    <label>Max drive <input type="range" id="drive" min="1" max="10" step="0.5" value="10"><span id="driveLbl" class="num mono">any</span></label>
+    <label>Snow ratio <select id="slrMode" title="How liquid precipitation is converted to snow depth">
+      <option value="kuchera">Temperature-based (Kuchera)</option>
+      <option value="typical">Flat regional typical ratio</option>
+      <option value="fixed">Model fixed 7:1 (Open-Meteo raw)</option>
+    </select></label>
+    <label>Blend <select id="blendMode" title="How the headline number combines the models">
+      <option value="mean">Multi-model mean</option>
+      <option value="median">Multi-model median</option>
+      <option value="ecmwf_ifs025">ECMWF only</option>
+      <option value="gfs_global">GFS only</option>
+    </select></label>
+    <div class="chips" id="regionChips"></div>
+  </div>
+  <div id="notices"></div>
+
+  <section id="tab-overview" role="tabpanel">
+    <div class="hero" id="heroWrap"><canvas id="heroArt" aria-hidden="true"></canvas><div id="hero"></div></div>
+    <div class="bets" id="bets"></div>
+    <div class="stats" id="stats"></div>
+    <div class="grid two">
+      <div class="card" style="padding:0">
+        <div class="tableWrap"><table class="ledger" id="ledger"><thead></thead><tbody></tbody></table></div>
+      </div>
+      <div>
+        <div class="card mapWrap">
+          <h2>Where it falls, and which way the air is moving</h2>
+          <div class="daysel" id="mapDays"></div>
+          <div id="map"></div>
+          <div class="legendRow" id="mapLegend"></div>
+        </div>
+        <div class="card" style="margin-top:16px">
+          <h2>Pattern read</h2>
+          <div id="pattern" class="why"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tab-storms" role="tabpanel" hidden>
+    <div class="card">
+      <h2>Storm timing by location (hourly snowfall, next 7 days)</h2>
+      <p class="small muted" style="margin:0 0 10px">Each strip is one location; each cell is one hour. Darker means heavier snowfall in the blended forecast. Read left to right for arrival and duration, top to bottom (west to east) to watch a storm move between ranges.</p>
+      <div class="stripes" id="stripes"></div>
+      <div class="legendRow" id="stripLegend"></div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <h2>Storm windows</h2>
+      <div id="windows"></div>
+    </div>
+  </section>
+
+  <section id="tab-compare" role="tabpanel" hidden>
+    <div class="card">
+      <h2>Side by side</h2>
+      <div class="filters" style="padding-top:0">
+        <label>A <select id="cmpA"></select></label>
+        <label>B <select id="cmpB"></select></label>
+        <label>C <select id="cmpC"><option value="">(none)</option></select></label>
+      </div>
+      <div id="cmpOut"></div>
+    </div>
+  </section>
+
+  <section id="tab-sources" role="tabpanel" hidden>
+    <div class="card sources" id="sources"></div>
+  </section>
+  <footer>Forecast data: Open-Meteo (ECMWF IFS, GFS, ICON, GEM, HRRR, NBM and AIFS where available), NWS/NOAA, USDA NRCS SNOTEL. Times in Mountain time. Day 4–7 is a trend, not a total: read the spread, not the point value.</footer>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-label="Location detail"><div class="inner" id="drawerInner"></div></aside>
+<div class="tip" id="tip"></div>
+<script>
+/* ===================== Locations =====================
+   favored / shadowed: 16-point compass sectors of the 700 mb wind (direction it blows FROM) that historically
+   deliver / starve this mountain. Sources: NWS office discussions, OpenSnow, Steenburgh (Utah), bestsnow.net,
+   Storm Peak Lab (Steamboat). Marked folklore where no study exists. snotelVerified=false means the station ID
+   came from memory and the station name returned by the USDA API should be checked against snotelName. */
+const LOCATIONS = [
+ // --- Front Range ---
+ {id:'eldora', name:'Eldora', short:'Eldora', state:'CO', region:'Front Range', lat:39.937, lon:-105.583, baseFt:9200, summitFt:10600, driveHrs:1.0, nws:'BOU', snotel:'663:CO:SNTL', snotelName:'Niwot', snotelVerified:false, avgSnow:300, slrTypical:15, favored:['NE','ENE','E','NNE'], shadowed:['W','WSW','SW'], upslope:true, avalanche:'CAIC Front Range', why:'East of the Divide: the biggest days come on easterly upslope flow behind a Colorado low; westerly storms dry out crossing the Divide.'},
+ {id:'echo', name:'Echo Mountain', short:'Echo', state:'CO', region:'Front Range', lat:39.684, lon:-105.519, baseFt:10050, summitFt:10650, driveHrs:1.0, nws:'BOU', snotel:'936:CO:SNTL', snotelName:'Echo Lake', snotelVerified:false, avgSnow:275, slrTypical:14, favored:['E','ENE','NE','ESE'], shadowed:['W','WNW','NW'], upslope:true, avalanche:'CAIC Front Range', why:'Small foothills area on Mt. Blue Sky; lives almost entirely on upslope events.'},
+ {id:'loveland', name:'Loveland', short:'Loveland', state:'CO', region:'Front Range', lat:39.680, lon:-105.897, baseFt:10800, summitFt:13010, driveHrs:1.0, nws:'BOU', snotel:'602:CO:SNTL', snotelName:'Loveland Basin', snotelVerified:false, avgSnow:380, slrTypical:15, favored:['NE','E','W','NW','WNW'], shadowed:['SW'], upslope:true, avalanche:'CAIC Front Range', why:'Straddles the Divide, so it collects on westerly flow and on easterly upslope; one of the few areas that wins both ways.'},
+ {id:'abasin', name:'Arapahoe Basin', short:'A-Basin', state:'CO', region:'Front Range', lat:39.642, lon:-105.872, baseFt:10780, summitFt:13050, driveHrs:1.25, nws:'BOU', snotel:'505:CO:SNTL', snotelName:'Grizzly Peak', snotelVerified:true, avgSnow:350, slrTypical:15, favored:['NW','W','WNW','E','NE'], shadowed:['SW','SSW'], upslope:true, avalanche:'CAIC Vail & Summit County', why:'High on the Divide; NW/W flow lifts over the crest and spring upslope events add big totals. Southwest flow is shadowed by the Sawatch and Tenmile ranges.'},
+ {id:'winterpark', name:'Winter Park', short:'Winter Park', state:'CO', region:'Front Range', lat:39.887, lon:-105.763, baseFt:9000, summitFt:12060, driveHrs:1.5, nws:'BOU', snotel:'335:CO:SNTL', snotelName:'Berthoud Summit', snotelVerified:true, avgSnow:347, slrTypical:15, favored:['NW','W','WNW','E','NE','ENE'], shadowed:[], upslope:true, avalanche:'CAIC Front Range', why:'Just west of the Divide at Berthoud Pass: catches NW/W orographic snow and also benefits when easterly upslope spills over the Divide.'},
+ {id:'berthoud', name:'Berthoud Pass', short:'Berthoud', state:'CO', region:'Front Range', lat:39.798, lon:-105.777, baseFt:10500, summitFt:11307, driveHrs:1.25, nws:'BOU', snotel:'335:CO:SNTL', snotelName:'Berthoud Summit', snotelVerified:true, avgSnow:400, slrTypical:15, favored:['W','NW','WNW','E','NE'], shadowed:[], upslope:true, avalanche:'CAIC Front Range', why:'Divide location: W/NW and easterly upslope both deliver. Measured new-snow water content ~7%.'},
+ {id:'lovelandpass', name:'Loveland Pass', short:'Lvld Pass', state:'CO', region:'Front Range', lat:39.664, lon:-105.879, baseFt:11200, summitFt:11990, driveHrs:1.25, nws:'BOU', snotel:'505:CO:SNTL', snotelName:'Grizzly Peak', snotelVerified:true, avgSnow:null, slrTypical:15, favored:['NW','W','WNW','E','NE'], shadowed:['SW'], upslope:true, avalanche:'CAIC Front Range / Vail & Summit', why:'Backcountry benchmark on the Divide between Loveland and A-Basin.'},
+ // --- Summit & Vail ---
+ {id:'keystone', name:'Keystone', short:'Keystone', state:'CO', region:'Summit & Vail', lat:39.605, lon:-105.954, baseFt:9280, summitFt:12408, driveHrs:1.5, nws:'BOU', snotel:'505:CO:SNTL', snotelName:'Grizzly Peak', snotelVerified:true, avgSnow:235, slrTypical:15, favored:['NW','W','WNW'], shadowed:['SW','S'], upslope:false, avalanche:'CAIC Vail & Summit County', why:'Lower and more sheltered than its neighbors; NW/W flow works, SW flow and most easterly upslope events miss it.'},
+ {id:'breck', name:'Breckenridge', short:'Breck', state:'CO', region:'Summit & Vail', lat:39.480, lon:-106.067, baseFt:9600, summitFt:12998, driveHrs:1.75, nws:'BOU', snotel:'531:CO:SNTL', snotelName:'Hoosier Pass', snotelVerified:false, avgSnow:300, slrTypical:15, favored:['NW','W','WNW','SW'], shadowed:['E','ENE','NE'], upslope:false, avalanche:'CAIC Vail & Summit County', why:'East face of the Tenmile Range: NW/W flow lifts over the crest; S/SW storms over Hoosier Pass help the southern peaks. Measured water content ~7.6%.'},
+ {id:'copper', name:'Copper Mountain', short:'Copper', state:'CO', region:'Summit & Vail', lat:39.502, lon:-106.151, baseFt:9712, summitFt:12313, driveHrs:1.5, nws:'BOU', snotel:'415:CO:SNTL', snotelName:'Copper Mountain', snotelVerified:true, avgSnow:290, slrTypical:15, favored:['NW','W','WNW'], shadowed:['SW','E'], upslope:false, avalanche:'CAIC Vail & Summit County', why:'West side of the Tenmile Range below Vail Pass; NW/W flow is the reliable producer.'},
+ {id:'vailpass', name:'Vail Pass', short:'Vail Pass', state:'CO', region:'Summit & Vail', lat:39.531, lon:-106.218, baseFt:10000, summitFt:10662, driveHrs:1.5, nws:'BOU', snotel:'842:CO:SNTL', snotelName:'Vail Mountain', snotelVerified:true, avgSnow:null, slrTypical:15, favored:['NW','W','WNW'], shadowed:['E'], upslope:false, avalanche:'CAIC Vail & Summit County', why:'I-70 benchmark and backcountry zone between Copper and Vail.'},
+ {id:'vail', name:'Vail', short:'Vail', state:'CO', region:'Summit & Vail', lat:39.606, lon:-106.355, baseFt:8120, summitFt:11570, driveHrs:1.75, nws:'GJT', snotel:'842:CO:SNTL', snotelName:'Vail Mountain', snotelVerified:true, avgSnow:354, slrTypical:15, favored:['NW','WNW','W'], shadowed:['SW','S','SSW'], upslope:false, avalanche:'CAIC Vail & Summit County', why:'The Gore Range faces NW: W-NW flow is "ideal" for Vail and the Back Bowls; southerly storms are shadowed by the Sawatch and Elks.'},
+ {id:'beavercreek', name:'Beaver Creek', short:'Beaver Ck', state:'CO', region:'Summit & Vail', lat:39.604, lon:-106.517, baseFt:8100, summitFt:11440, driveHrs:2.0, nws:'GJT', snotel:'842:CO:SNTL', snotelName:'Vail Mountain', snotelVerified:true, avgSnow:325, slrTypical:15, favored:['NW','W','WNW'], shadowed:['SW','S'], upslope:false, avalanche:'CAIC Vail & Summit County', why:'Same NW-flow regime as Vail, slightly less total.'},
+ {id:'cooper', name:'Ski Cooper', short:'Cooper', state:'CO', region:'Summit & Vail', lat:39.360, lon:-106.303, baseFt:10500, summitFt:11700, driveHrs:2.25, nws:'PUB', snotel:'485:CO:SNTL', snotelName:'Fremont Pass', snotelVerified:false, avgSnow:255, slrTypical:15, favored:['W','NW','WNW'], shadowed:['E'], upslope:false, avalanche:'CAIC Sawatch', why:'High and cold at Tennessee Pass; modest totals, very dry snow.'},
+ // --- Northern Colorado ---
+ {id:'steamboat', name:'Steamboat', short:'Steamboat', state:'CO', region:'Northern Colorado', lat:40.457, lon:-106.805, baseFt:6900, summitFt:10568, driveHrs:3.0, nws:'GJT', snotel:'825:CO:SNTL', snotelName:'Tower', snotelVerified:false, avgSnow:350, slrTypical:16, favored:['NW','WNW','W','NNW'], shadowed:['SW','S','SSW'], upslope:false, avalanche:'CAIC Steamboat & Flat Tops', why:'The Park Range is the first big barrier for NW flow; Storm Peak Lab\'s 45-year record says the biggest days are NW tracks with summit temps near 0–10°F and ~20 mph winds. Southern storms miss it. Water content ~6%: the lightest snow in Colorado.', pin:true},
+ {id:'rabbitears', name:'Rabbit Ears Pass', short:'Rabbit Ears', state:'CO', region:'Northern Colorado', lat:40.385, lon:-106.616, baseFt:9000, summitFt:9426, driveHrs:2.75, nws:'GJT', snotel:'709:CO:SNTL', snotelName:'Rabbit Ears', snotelVerified:false, avgSnow:null, slrTypical:16, favored:['NW','W','WNW'], shadowed:['S','SSW'], upslope:false, avalanche:'CAIC Steamboat & Flat Tops', why:'Backcountry benchmark; same NW regime as Steamboat.'},
+ // --- Aspen & central ---
+ {id:'aspen', name:'Aspen Mountain', short:'Aspen', state:'CO', region:'Aspen & Central', lat:39.187, lon:-106.819, baseFt:7945, summitFt:11212, driveHrs:3.5, nws:'GJT', snotel:'542:CO:SNTL', snotelName:'Independence Pass', snotelVerified:false, avgSnow:300, slrTypical:15, favored:['W','SW','WSW','NW','WNW'], shadowed:['E','NE'], upslope:false, avalanche:'CAIC Aspen', why:'Elk Mountains take both W/SW and NW flow; totals are moderate because the range sits behind several upstream barriers.'},
+ {id:'highlands', name:'Aspen Highlands', short:'Highlands', state:'CO', region:'Aspen & Central', lat:39.182, lon:-106.856, baseFt:8040, summitFt:11675, driveHrs:3.5, nws:'GJT', snotel:'542:CO:SNTL', snotelName:'Independence Pass', snotelVerified:false, avgSnow:300, slrTypical:15, favored:['W','SW','WSW','NW'], shadowed:['E','NE'], upslope:false, avalanche:'CAIC Aspen', why:'Highland Bowl faces north and holds snow; storm behavior mirrors Aspen Mountain.'},
+ {id:'snowmass', name:'Snowmass', short:'Snowmass', state:'CO', region:'Aspen & Central', lat:39.209, lon:-106.950, baseFt:8104, summitFt:12510, driveHrs:3.75, nws:'GJT', snotel:'737:CO:SNTL', snotelName:'Schofield Pass', snotelVerified:false, avgSnow:300, slrTypical:15, favored:['W','SW','WSW','NW'], shadowed:['E','NE'], upslope:false, avalanche:'CAIC Aspen', why:'Highest Aspen area; the upper mountain does well in both W/SW and NW events.'},
+ {id:'sunlight', name:'Sunlight', short:'Sunlight', state:'CO', region:'Aspen & Central', lat:39.400, lon:-107.339, baseFt:7885, summitFt:9895, driveHrs:3.0, nws:'GJT', snotel:'618:CO:SNTL', snotelName:'McClure Pass', snotelVerified:false, avgSnow:250, slrTypical:14, favored:['W','SW','WSW'], shadowed:['E'], upslope:false, avalanche:'CAIC Aspen', why:'Low elevation near Glenwood Springs; warm storms can bring rain to the base.'},
+ {id:'powderhorn', name:'Powderhorn', short:'Powderhorn', state:'CO', region:'Aspen & Central', lat:39.069, lon:-108.150, baseFt:8200, summitFt:9850, driveHrs:4.0, nws:'GJT', snotel:'622:CO:SNTL', snotelName:'Mesa Lakes', snotelVerified:false, avgSnow:250, slrTypical:14, favored:['W','SW','WSW'], shadowed:['NW','N','NNW'], upslope:false, avalanche:'CAIC Grand Mesa', why:'The Grand Mesa is the first barrier for moist W/SW Pacific flow entering Colorado; NW flow arrives drier.'},
+ {id:'crestedbutte', name:'Crested Butte', short:'Crested Butte', state:'CO', region:'Aspen & Central', lat:38.899, lon:-106.965, baseFt:9375, summitFt:12162, driveHrs:4.25, nws:'GJT', snotel:'380:CO:SNTL', snotelName:'Butte', snotelVerified:false, avgSnow:236, slrTypical:15, favored:['SW','S','SSW','WSW'], shadowed:['NW','NNW','N'], upslope:false, avalanche:'CAIC Gunnison', why:'Shadowed by the Ruby Range and Elks on NW flow (Irwin, a few miles west, takes that snow); needs S/SW Four Corners tracks. Gothic, just up-valley, gets ~100 in more per season.'},
+ {id:'monarch', name:'Monarch', short:'Monarch', state:'CO', region:'Aspen & Central', lat:38.512, lon:-106.332, baseFt:10790, summitFt:11952, driveHrs:3.0, nws:'PUB', snotel:'701:CO:SNTL', snotelName:'Porphyry Creek', snotelVerified:false, avgSnow:350, slrTypical:15, favored:['SW','S','W','WSW','SSW'], shadowed:['NE'], upslope:false, avalanche:'CAIC Sawatch', why:'On the Divide crest at Monarch Pass; natural-snow-only area that does best on SW and W flow.'},
+ // --- San Juans ---
+ {id:'wolfcreek', name:'Wolf Creek', short:'Wolf Creek', state:'CO', region:'San Juans', lat:37.472, lon:-106.795, baseFt:10300, summitFt:11904, driveHrs:4.75, nws:'PUB', snotel:'874:CO:SNTL', snotelName:'Wolf Creek Summit', snotelVerified:true, avgSnow:400, slrTypical:12, favored:['SW','WSW','SSW','S','NE'], shadowed:['N','NNW'], upslope:true, avalanche:'CAIC South San Juan', why:'The standout SW-flow mountain in Colorado: the first high barrier for subtropical moisture and cutoff lows over the Four Corners. Also gains from NE flow lifting out of the San Luis Valley. Pass normal 392 in; record 838 in (1978-79). Denser snow than the northern resorts.', pin:true},
+ {id:'wolfcreekpass', name:'Wolf Creek Pass', short:'WC Pass', state:'CO', region:'San Juans', lat:37.483, lon:-106.802, baseFt:10500, summitFt:10857, driveHrs:4.5, nws:'PUB', snotel:'874:CO:SNTL', snotelName:'Wolf Creek Summit', snotelVerified:true, avgSnow:392, slrTypical:12, favored:['SW','WSW','SSW','S','NE'], shadowed:['N','NNW'], upslope:true, avalanche:'CAIC South San Juan', why:'US-160 pass benchmark next to the ski area.'},
+ {id:'purgatory', name:'Purgatory', short:'Purgatory', state:'CO', region:'San Juans', lat:37.630, lon:-107.814, baseFt:8793, summitFt:10822, driveHrs:6.5, nws:'GJT', snotel:'386:CO:SNTL', snotelName:'Cascade #2', snotelVerified:false, avgSnow:260, slrTypical:13, favored:['SW','S','SSW','WSW'], shadowed:['NW','N'], upslope:false, avalanche:'CAIC North San Juan', why:'Southern San Juans north of Durango; favors SW tracks.'},
+ {id:'telluride', name:'Telluride', short:'Telluride', state:'CO', region:'San Juans', lat:37.937, lon:-107.846, baseFt:8725, summitFt:13150, driveHrs:6.5, nws:'GJT', snotel:'586:CO:SNTL', snotelName:'Lizard Head Pass', snotelVerified:true, avgSnow:280, slrTypical:13, favored:['SW','WSW','W'], shadowed:['NE','E'], upslope:false, avalanche:'CAIC North San Juan', why:'Western San Juans: SW flow is the main producer; NW systems reach it only when the trough digs far south. Many smaller, frequent storms.'},
+ {id:'silverton', name:'Silverton Mountain', short:'Silverton', state:'CO', region:'San Juans', lat:37.885, lon:-107.665, baseFt:10400, summitFt:13487, driveHrs:6.0, nws:'GJT', snotel:'713:CO:SNTL', snotelName:'Red Mountain Pass', snotelVerified:true, avgSnow:400, slrTypical:13, favored:['SW','WSW','NW','W','WNW'], shadowed:[], upslope:false, avalanche:'CAIC North San Juan', why:'Deep in the San Juans; collects on both SW and NW flow (about 30% more than Telluride).'},
+ {id:'redmtnpass', name:'Red Mountain Pass', short:'Red Mtn', state:'CO', region:'San Juans', lat:37.898, lon:-107.712, baseFt:10500, summitFt:11018, driveHrs:6.0, nws:'GJT', snotel:'713:CO:SNTL', snotelName:'Red Mountain Pass', snotelVerified:true, avgSnow:null, slrTypical:13, favored:['SW','WSW','NW','W'], shadowed:[], upslope:false, avalanche:'CAIC North San Juan', why:'US-550 benchmark between Silverton and Ouray.'},
+ // --- Wyoming ---
+ {id:'snowyrange', name:'Snowy Range', short:'Snowy Range', state:'WY', region:'Wyoming', lat:41.343, lon:-106.283, baseFt:8798, summitFt:9663, driveHrs:2.75, nws:'CYS', snotel:'367:WY:SNTL', snotelName:'Brooklyn Lake', snotelVerified:true, avgSnow:250, slrTypical:15, favored:['NW','W','WNW','NE','E'], shadowed:[], upslope:true, avalanche:'none (no center coverage)', why:'Medicine Bow Mountains west of Laramie; NW/W flow plus upslope on the east side.'},
+ {id:'hogadon', name:'Hogadon Basin', short:'Hogadon', state:'WY', region:'Wyoming', lat:42.733, lon:-106.329, baseFt:7370, summitFt:8000, driveHrs:4.5, nws:'RIW', snotel:null, avgSnow:150, slrTypical:14, favored:['NE','E','NW'], shadowed:['SW','S'], upslope:true, avalanche:'none', why:'Casper Mountain; small, upslope-dependent.'},
+ {id:'jackson', name:'Jackson Hole', short:'Jackson', state:'WY', region:'Wyoming', lat:43.587, lon:-110.828, baseFt:6311, summitFt:10450, driveHrs:8.75, nws:'RIW', snotel:'689:WY:SNTL', snotelName:'Phillips Bench', snotelVerified:true, avgSnow:459, slrTypical:14, favored:['SW','W','WSW'], shadowed:['NE','E'], upslope:false, avalanche:'Bridger-Teton Avalanche Center', why:'Well beyond 5 hours, included for reference: the Tetons feed on SW/W Snake River Plain moisture.'},
+ {id:'targhee', name:'Grand Targhee', short:'Targhee', state:'WY', region:'Wyoming', lat:43.788, lon:-110.932, baseFt:7851, summitFt:10121, driveHrs:9.0, nws:'RIW', snotel:'1082:WY:SNTL', snotelName:'Grand Targhee', snotelVerified:true, avgSnow:500, slrTypical:14, favored:['W','SW','WSW','WNW'], shadowed:['E','NE'], upslope:false, avalanche:'Bridger-Teton Avalanche Center', why:'West slope of the Tetons, the first barrier for Pacific moisture off the Snake River Plain.'},
+ // --- New Mexico ---
+ {id:'taos', name:'Taos Ski Valley', short:'Taos', state:'NM', region:'New Mexico', lat:36.596, lon:-105.454, baseFt:9350, summitFt:12481, driveHrs:5.0, nws:'ABQ', snotel:'1168:NM:SNTL', snotelName:'Taos Powderhorn', snotelVerified:true, avgSnow:250, slrTypical:13, favored:['SW','S','SSW','WSW'], shadowed:['NW','NNW'], upslope:false, avalanche:'Taos Avalanche Center', why:'Sangre de Cristo range: thrives on SW flow and closed lows over Arizona / Four Corners; NW flow arrives dry. Backside NE upslope events occasionally surprise.'},
+ {id:'santafe', name:'Ski Santa Fe', short:'Santa Fe', state:'NM', region:'New Mexico', lat:35.796, lon:-105.802, baseFt:10350, summitFt:12075, driveHrs:5.75, nws:'ABQ', snotel:'922:NM:SNTL', snotelName:'Santa Fe', snotelVerified:true, avgSnow:225, slrTypical:13, favored:['SW','S','SSW'], shadowed:['NW'], upslope:false, avalanche:'none dedicated', why:'High base; needs southern-track storms.'},
+ {id:'angelfire', name:'Angel Fire', short:'Angel Fire', state:'NM', region:'New Mexico', lat:36.387, lon:-105.278, baseFt:8600, summitFt:10677, driveHrs:4.5, nws:'ABQ', snotel:'491:NM:SNTL', snotelName:'Gallegos Peak', snotelVerified:true, avgSnow:210, slrTypical:13, favored:['E','NE','SW'], shadowed:['W','NW'], upslope:true, avalanche:'none dedicated', why:'East side of the Sangres in the Moreno Valley; benefits from easterly upslope as well as SW storms.'},
+ {id:'redriver', name:'Red River', short:'Red River', state:'NM', region:'New Mexico', lat:36.701, lon:-105.413, baseFt:8750, summitFt:10350, driveHrs:4.75, nws:'ABQ', snotel:'715:NM:SNTL', snotelName:'Red River Pass #2', snotelVerified:true, avgSnow:216, slrTypical:13, favored:['SW','WSW','W'], shadowed:['NE'], upslope:false, avalanche:'Taos Avalanche Center', why:'Northern Sangres; SW flow.'},
+ // --- Utah: Cottonwoods ---
+ {id:'alta', name:'Alta', short:'Alta', state:'UT', region:'Cottonwoods', lat:40.580, lon:-111.638, baseFt:8530, summitFt:11068, driveHrs:7.75, nws:'SLC', snotel:'1308:UT:SNTL', snotelName:'Atwater', snotelVerified:true, avgSnow:530, slrTypical:13, favored:['NW','WNW','W','SW','WSW','NNW'], shadowed:['E','ENE','ESE'], upslope:false, lake:true, avalanche:'UAC Salt Lake', why:'Top of Little Cottonwood Canyon: NW post-frontal flow is the classic producer (most major events), SW flow also dumps, and Great Salt Lake effect adds ~5% of the season, mostly in fall. Median ratio 13:1, water content ~8.5%.', pin:true},
+ {id:'snowbird', name:'Snowbird', short:'Snowbird', state:'UT', region:'Cottonwoods', lat:40.581, lon:-111.656, baseFt:7760, summitFt:11000, driveHrs:7.75, nws:'SLC', snotel:'766:UT:SNTL', snotelName:'Snowbird', snotelVerified:true, avgSnow:500, slrTypical:13, favored:['NW','WNW','W','SW','WSW'], shadowed:['E','ENE'], upslope:false, lake:true, avalanche:'UAC Salt Lake', why:'Shares Alta\'s canyon; lake effect is 5.1% of snow water equivalent over 12 seasons (Steenburgh).'},
+ {id:'brighton', name:'Brighton', short:'Brighton', state:'UT', region:'Cottonwoods', lat:40.598, lon:-111.583, baseFt:8755, summitFt:10750, driveHrs:7.5, nws:'SLC', snotel:'366:UT:SNTL', snotelName:'Brighton', snotelVerified:true, avgSnow:500, slrTypical:13, favored:['NW','WNW','W','SW','WSW'], shadowed:['E'], upslope:false, lake:true, avalanche:'UAC Salt Lake', why:'Head of Big Cottonwood: does well on NW flow and is often named a SW-flow winner too.'},
+ {id:'solitude', name:'Solitude', short:'Solitude', state:'UT', region:'Cottonwoods', lat:40.620, lon:-111.592, baseFt:7994, summitFt:10488, driveHrs:7.5, nws:'SLC', snotel:'628:UT:SNTL', snotelName:'Mill-D North', snotelVerified:true, avgSnow:440, slrTypical:13, favored:['NW','WNW','W','SW'], shadowed:['E'], upslope:false, lake:true, avalanche:'UAC Salt Lake', why:'Big Cottonwood; similar to Brighton with a bit less total.'},
+ // --- Utah: Wasatch Back ---
+ {id:'parkcity', name:'Park City Mountain', short:'Park City', state:'UT', region:'Wasatch Back', lat:40.651, lon:-111.508, baseFt:6800, summitFt:10026, driveHrs:7.0, nws:'SLC', snotel:'814:UT:SNTL', snotelName:'Thaynes Canyon', snotelVerified:true, avgSnow:354, slrTypical:13, favored:['SW','S','SSW','WSW'], shadowed:['NW','NNW','W'], upslope:false, avalanche:'UAC Salt Lake', why:'Wasatch Back: the Cottonwood ridgeline takes NW-flow snow first, so Park City wins on southerly lows and SW flow.'},
+ {id:'deervalley', name:'Deer Valley', short:'Deer Valley', state:'UT', region:'Wasatch Back', lat:40.637, lon:-111.478, baseFt:6500, summitFt:9570, driveHrs:7.0, nws:'SLC', snotel:'814:UT:SNTL', snotelName:'Thaynes Canyon', snotelVerified:true, avgSnow:300, slrTypical:13, favored:['SW','S','SSW'], shadowed:['NW','W'], upslope:false, avalanche:'UAC Salt Lake', why:'Same Wasatch Back regime as Park City; favors southern tracks.'},
+ {id:'sundance', name:'Sundance', short:'Sundance', state:'UT', region:'Wasatch Back', lat:40.392, lon:-111.579, baseFt:6100, summitFt:8250, driveHrs:7.5, nws:'SLC', snotel:'820:UT:SNTL', snotelName:'Timpanogos Divide', snotelVerified:true, avgSnow:300, slrTypical:13, favored:['SW','S','SSW','WSW'], shadowed:['NW','N'], upslope:false, avalanche:'UAC Provo', why:'On Mt. Timpanogos; named as a SW-flow winner. Low base, so snow level matters a lot.'},
+ // --- Utah: north ---
+ {id:'snowbasin', name:'Snowbasin', short:'Snowbasin', state:'UT', region:'Northern Utah', lat:41.216, lon:-111.857, baseFt:6316, summitFt:9570, driveHrs:8.0, nws:'SLC', snotel:'332:UT:SNTL', snotelName:'Ben Lomond Peak', snotelVerified:true, avgSnow:310, slrTypical:13, favored:['SW','WSW','S'], shadowed:['NW'], upslope:false, avalanche:'UAC Ogden', why:'SW-flow winner; in NW flow the Cottonwoods out-produce the northern Wasatch.'},
+ {id:'powdermtn', name:'Powder Mountain', short:'Powder Mtn', state:'UT', region:'Northern Utah', lat:41.379, lon:-111.781, baseFt:6903, summitFt:9422, driveHrs:8.25, nws:'SLC', snotel:'332:UT:SNTL', snotelName:'Ben Lomond Peak', snotelVerified:true, avgSnow:355, slrTypical:13, favored:['NW','W','WNW'], shadowed:['S','SE','SSE'], upslope:false, lake:true, avalanche:'UAC Ogden', why:'NW/W flow and occasional lake-effect bands into Ogden Valley; resort "500+" claim is overstated by independent counts.'},
+ {id:'nordic', name:'Nordic Valley', short:'Nordic', state:'UT', region:'Northern Utah', lat:41.311, lon:-111.865, baseFt:5365, summitFt:7060, driveHrs:8.0, nws:'SLC', snotel:'333:UT:SNTL', snotelName:'Ben Lomond Trail', snotelVerified:false, avgSnow:null, slrTypical:12, favored:['NW','W','WNW'], shadowed:[], upslope:false, lake:true, avalanche:'UAC Ogden', why:'Very low elevation; rain risk in warm storms.'},
+ {id:'beavermtn', name:'Beaver Mountain', short:'Beaver Mtn', state:'UT', region:'Northern Utah', lat:41.969, lon:-111.541, baseFt:7100, summitFt:8800, driveHrs:9.0, nws:'SLC', snotel:'823:UT:SNTL', snotelName:'Tony Grove Lake', snotelVerified:true, avgSnow:400, slrTypical:13, favored:['NW','W','WNW'], shadowed:[], upslope:false, avalanche:'UAC Logan', why:'Logan Canyon / Bear River Range; NW/W flow.'},
+ {id:'cherrypeak', name:'Cherry Peak', short:'Cherry Pk', state:'UT', region:'Northern Utah', lat:41.936, lon:-111.770, baseFt:5775, summitFt:7050, driveHrs:9.0, nws:'SLC', snotel:'1113:UT:SNTL', snotelName:'Tony Grove RS', snotelVerified:true, avgSnow:null, slrTypical:12, favored:['NW','W','WNW'], shadowed:[], upslope:false, avalanche:'UAC Logan', why:'Low-elevation Cache Valley area.'},
+ // --- Utah: south ---
+ {id:'brianhead', name:'Brian Head', short:'Brian Head', state:'UT', region:'Southern Utah', lat:37.683, lon:-112.833, baseFt:9600, summitFt:10920, driveHrs:8.5, nws:'SLC', snotel:'626:UT:SNTL', snotelName:'Midway Valley', snotelVerified:false, avgSnow:360, slrTypical:13, favored:['SW','S','SSW','WSW'], shadowed:['NW','N'], upslope:false, avalanche:'UAC Southwest (intermittent)', why:'Highest base in Utah; feeds on SW flow and cutoff lows over southern Nevada / Arizona.'},
+];
+LOCATIONS.forEach(l=>{ l.midFt = Math.round((l.baseFt + 2*l.summitFt)/3); });
+/* ===================== Core: config, fetch, derived metrics ===================== */
+const TZ = 'America/Denver';
+const CACHE_TTL_MS = 30*60*1000;
+const MODELS = [
+  {id:'ecmwf_ifs025', ids:['ecmwf_ifs025'], name:'ECMWF IFS', short:'ECMWF', color:'var(--s2)', hex:'#eb6834', res:'0.25° (~25 km) open data; the gold-standard global model', days:7, pressure:true, core:true},
+  {id:'gfs_global',   ids:['gfs_global','ncep_gfs_global','gfs_seamless','ncep_gfs_seamless'],   name:'NOAA GFS',  short:'GFS',   color:'var(--s1)', hex:'#2a78d6', res:'0.11–0.25° (~13 km) global; runs 4×/day', days:7, pressure:true, core:true},
+  {id:'icon_seamless',ids:['icon_seamless','dwd_icon_seamless'],name:'DWD ICON',  short:'ICON',  color:'var(--s3)', hex:'#1baf7a', res:'13 km global; German weather service', days:7, core:true},
+  {id:'gem_seamless', ids:['gem_seamless','cmc_gem_seamless'], name:'Canadian GEM',short:'GEM', color:'var(--s4)', hex:'#eda100', res:'15 km global (2.5 km regional first 2 days)', days:7, core:true},
+  {id:'gfs_hrrr',     ids:['gfs_hrrr','ncep_hrrr_conus'],     name:'NOAA HRRR', short:'HRRR',  color:'var(--s5)', hex:'#e87ba4', res:'3 km, 48 h only; best terrain detail short range', days:2, optional:true},
+  {id:'ncep_nbm_conus',ids:['ncep_nbm_conus','nbm_conus'],name:'NOAA NBM',short:'NBM',   color:'var(--s6)', hex:'#008300', res:'2.5 km National Blend of Models (what NWS point forecasts start from)', days:7, optional:true},
+  {id:'ecmwf_aifs025_single',ids:['ecmwf_aifs025_single','ecmwf_aifs025'],name:'ECMWF AIFS',short:'AIFS',color:'var(--s7)', hex:'#6250d6', res:'0.25° machine-learning model from ECMWF', days:7, optional:true},
+];
+const CORE_HOURLY = ['snowfall','precipitation','temperature_2m','wind_speed_10m','wind_direction_10m','weather_code'];
+const EXT_HOURLY  = ['freezing_level_height','wind_gusts_10m'];
+const PRES_HOURLY = ['temperature_700hPa','relative_humidity_700hPa','wind_speed_700hPa','wind_direction_700hPa','temperature_850hPa','geopotential_height_500hPa'];
+const COMPASS = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+const compassDeg = n => COMPASS.indexOf(n)*22.5;
+const degToCompass = d => COMPASS[Math.round(((d%360)+360)%360/22.5)%16];
+
+const state = {
+  models:{},        // modelId -> {ok, data:[perLocation], fetchedAt, note}
+  derived:{},       // locId -> derived metrics
+  prefs: loadPrefs(),
+  selected:null, sortKey:'d7', sortDir:'desc', regions:new Set(), q:'',
+  mapDay:'all', stripDay:'all', offset:-6*3600, now:Math.floor(Date.now()/1000),
+  afd:{}, nwsGrid:{}, snotel:{}, ens:{},
+};
+function loadPrefs(){ try{ return Object.assign({slrMode:'kuchera', blendMode:'mean', drive:10, theme:''}, JSON.parse(localStorage.getItem('pl.prefs')||'{}')); }catch(e){ return {slrMode:'kuchera', blendMode:'mean', drive:10, theme:''}; } }
+function savePrefs(){ try{ localStorage.setItem('pl.prefs', JSON.stringify(state.prefs)); }catch(e){} }
+function cacheGet(k){ try{ const v=JSON.parse(localStorage.getItem('pl.cache.'+k)||'null'); if(v && Date.now()-v.t<CACHE_TTL_MS) return v; }catch(e){} return null; }
+function cacheSet(k,data){ try{ localStorage.setItem('pl.cache.'+k, JSON.stringify({t:Date.now(),data})); }catch(e){ /* quota: ignore */ } }
+
+/* ---------- Open-Meteo ---------- */
+function omUrl(modelId, vars, withElev){
+  const p = new URLSearchParams();
+  p.set('latitude', LOCATIONS.map(l=>l.lat).join(','));
+  p.set('longitude', LOCATIONS.map(l=>l.lon).join(','));
+  if(withElev!==false) p.set('elevation', LOCATIONS.map(l=>Math.round(l.midFt*0.3048)).join(','));
+  p.set('hourly', vars.join(','));
+  p.set('models', modelId);
+  p.set('timezone', TZ); p.set('timeformat','unixtime'); p.set('forecast_days','7');
+  p.set('temperature_unit','fahrenheit'); p.set('wind_speed_unit','mph'); p.set('precipitation_unit','inch');
+  return 'https://api.open-meteo.com/v1/forecast?'+p.toString();
+}
+// Open-Meteo reports geopotential height and freezing level in feet when imperial precipitation units are requested in some versions; keep everything in metres internally.
+function normaliseUnits(h, units){
+  if(!h) return h; const feet = k=>{ const u=units&&units[k]; if(u) return /ft|feet/i.test(u); const vals=(h[k]||[]).filter(v=>v!=null); if(!vals.length) return false; const med=vals.slice().sort((a,b)=>a-b)[vals.length>>1]; return med>8000; };
+  for(const k of ['geopotential_height_500hPa','freezing_level_height']){ if(h[k] && feet(k)) h[k]=h[k].map(v=>v==null?null:v*0.3048); }
+  return h;
+}
+async function fetchJson(url, opts){
+  const r = await fetch(url, opts);
+  let j=null; try{ j = await r.json(); }catch(e){}
+  if(!r.ok || (j && j.error)) throw new Error((j && (j.reason||j.detail||j.title)) || ('HTTP '+r.status));
+  return j;
+}
+async function fetchModel(m, force){
+  const key = 'm.'+m.id;
+  if(!force){ const c=cacheGet(key); if(c){ state.models[m.id] = Object.assign({fromCache:true, fetchedAt:c.t}, c.data); return; } }
+  const attempts = [];
+  for(const id of m.ids){
+    for(const elev of [true,false]){
+      attempts.push({id, elev, vars:[...CORE_HOURLY, ...EXT_HOURLY, ...(m.pressure?PRES_HOURLY:[])], note:''});
+      if(m.pressure) attempts.push({id, elev, vars:[...CORE_HOURLY, ...EXT_HOURLY], note:'700 mb fields unavailable for this model'});
+      attempts.push({id, elev, vars:[...CORE_HOURLY], note:'freezing level unavailable for this model'});
+    }
+  }
+  let lastErr=null;
+  for(const a of attempts){
+    try{
+      const j = await fetchJson(omUrl(a.id, a.vars, a.elev));
+      const arr = Array.isArray(j)?j:[j];
+      if(arr.length!==LOCATIONS.length) throw new Error('location count mismatch');
+      const data = {ok:true, data:arr.map(x=>({elev:x.elevation, offset:x.utc_offset_seconds, h:normaliseUnits(x.hourly, x.hourly_units), units:x.hourly_units})), note:a.note, usedId:a.id};
+      state.models[m.id] = Object.assign({fetchedAt:Date.now()}, data);
+      cacheSet(key, data);
+      return;
+    }catch(e){ lastErr=e; }
+  }
+  state.models[m.id] = {ok:false, err:String(lastErr && lastErr.message || lastErr)};
+}
+
+/* ---------- Snow-to-liquid ratio ---------- */
+// Open-Meteo snowfall is liquid × 7 (7:1). Liquid equivalent of the snow portion = snowfall/7.
+function slrFor(loc, h, i){
+  const mode = state.prefs.slrMode;
+  if(mode==='fixed') return 7;
+  if(mode==='typical') return loc.slrTypical || 14;
+  // Kuchera-style: column max temperature proxy = warmest of 2 m, 850 mb, 700 mb (°F -> K)
+  const cands = [h.temperature_2m && h.temperature_2m[i], (loc.midFt*0.3048<1600 && h.temperature_850hPa) ? h.temperature_850hPa[i] : null, h.temperature_700hPa && h.temperature_700hPa[i]].filter(v=>v!=null);
+  if(!cands.length) return loc.slrTypical || 14;
+  const tmaxF = Math.max(...cands); const tK = (tmaxF-32)*5/9 + 273.15;
+  let slr = tK>271.16 ? 12 + 2*(271.16-tK) : 12 + (271.16-tK);
+  const w = h.wind_speed_10m && h.wind_speed_10m[i]; if(w!=null && w>25) slr *= 0.85; // wind-packed
+  return Math.max(5, Math.min(20, slr));
+}
+function adjustedSnow(loc, h, i){
+  const raw = h.snowfall && h.snowfall[i]; if(raw==null) return null;
+  if(state.prefs.slrMode==='fixed') return raw;
+  return (raw/7) * slrFor(loc,h,i);
+}
+
+/* ---------- Derived metrics ---------- */
+function dayIndex(t, offset){ return Math.floor((t+offset)/86400); }
+function fmtDay(t, offset, style){ const d=new Date((t)*1000); return d.toLocaleDateString('en-US', Object.assign({timeZone:TZ}, style||{weekday:'short', month:'numeric', day:'numeric'})); }
+function fmtHour(t){ return new Date(t*1000).toLocaleTimeString('en-US',{timeZone:TZ, hour:'numeric'}); }
+function fmtDT(t){ return new Date(t*1000).toLocaleString('en-US',{timeZone:TZ, weekday:'short', hour:'numeric'}); }
+function mean(a){ a=a.filter(v=>v!=null && !isNaN(v)); return a.length? a.reduce((s,v)=>s+v,0)/a.length : null; }
+function median(a){ a=a.filter(v=>v!=null && !isNaN(v)).sort((x,y)=>x-y); if(!a.length) return null; const m=a.length>>1; return a.length%2? a[m] : (a[m-1]+a[m])/2; }
+function quantile(sorted, q){ if(!sorted.length) return null; const pos=(sorted.length-1)*q, b=Math.floor(pos), r=pos-b; return sorted[b+1]!=null? sorted[b]+r*(sorted[b+1]-sorted[b]) : sorted[b]; }
+function angDiff(a,b){ let d=Math.abs(a-b)%360; return d>180?360-d:d; }
+function vecMean(dirs, spds, wts){ let u=0,v=0,W=0,S=0; for(let i=0;i<dirs.length;i++){ if(dirs[i]==null||spds[i]==null) continue; const w=(wts?wts[i]:1); if(!(w>0)) continue; const r=dirs[i]*Math.PI/180; u+= -Math.sin(r)*spds[i]*w; v+= -Math.cos(r)*spds[i]*w; S+=spds[i]*w; W+=w; } if(!W) return null; u/=W; v/=W; const vspd=Math.hypot(u,v), spd=S/W; let dir=(Math.atan2(-u,-v)*180/Math.PI+360)%360; return {dir, spd, vspd, steady: spd>0? vspd/spd : 0}; }
+// Orographic fit: +1 favorable, 0 neutral, -1 shadowed, from flow direction vs the location's favored / shadowed sectors
+function fitScore(loc, dir, steady, spd){
+  if(dir==null) return null; if(steady!=null && steady<0.35) return 0; if(spd!=null && spd<6) return 0;
+  const near = list => Math.min(...(list||[]).map(n=>angDiff(dir, compassDeg(n))), 999);
+  const f = near(loc.favored), s = near(loc.shadowed);
+  const fv = f<=22.5?1 : f<=45? 1-(f-22.5)/22.5 : 0;
+  const sv = s<=22.5?1 : s<=45? 1-(s-22.5)/22.5 : 0;
+  return fv - sv;
+}
+function fitLabel(v, flow){ if(v==null) return {t:'—', cls:'neutral'}; if(flow && flow.spd!=null && flow.spd<6) return {t:'light winds', cls:'neutral'}; if(flow && flow.steady!=null && flow.steady<0.35) return {t:'variable flow', cls:'neutral'}; if(v>=0.6) return {t:'favorable', cls:'high'}; if(v>=0.2) return {t:'leans favorable', cls:'high'}; if(v>-0.2) return {t:'neutral', cls:'neutral'}; if(v>-0.6) return {t:'leans shadowed', cls:'med'}; return {t:'shadowed', cls:'low'}; }
+
+function computeAll(){
+  const now = state.now;
+  const ref = state.models['ecmwf_ifs025'] && state.models['ecmwf_ifs025'].ok ? state.models['ecmwf_ifs025'] : Object.values(state.models).find(m=>m.ok);
+  if(!ref) return;
+  state.offset = ref.data[0].offset;
+  LOCATIONS.forEach((loc, li)=>{
+    const times = ref.data[li].h.time;
+    const n = times.length;
+    const startIdx = Math.max(0, times.findIndex(t=>t>=now-3600));
+    const perModel = {};
+    for(const m of MODELS){
+      const md = state.models[m.id]; if(!md || !md.ok) continue;
+      const h = md.data[li].h; if(!h || !h.time) continue;
+      // align by time
+      const map = new Map(h.time.map((t,i)=>[t,i]));
+      const snow = new Array(n).fill(null), liq=new Array(n).fill(null), slr=new Array(n).fill(null);
+      let cover=0;
+      for(let i=0;i<n;i++){ const j=map.get(times[i]); if(j==null) continue; const s=adjustedSnow(loc,h,j); if(s!=null){ snow[i]=s; cover++; } liq[i]= h.precipitation? h.precipitation[j] : null; slr[i]= (h.snowfall&&h.snowfall[j]>0)? slrFor(loc,h,j) : null; }
+      const tot = (a,b)=>{ let s=0, any=false; for(let i=a;i<Math.min(b,n);i++){ if(snow[i]!=null){ s+=snow[i]; any=true; } } return any? s : null; };
+      perModel[m.id] = { snow, liq, slr, cover, full: cover >= n-2, h, map,
+        d1: tot(startIdx, startIdx+24), d3: tot(startIdx, startIdx+72), d7: tot(startIdx, n) };
+    }
+    // blend
+    const blendIds = (()=>{ const bm=state.prefs.blendMode; if(bm==='mean'||bm==='median') return Object.keys(perModel).filter(id=>perModel[id].full); return perModel[bm]? [bm] : Object.keys(perModel).filter(id=>perModel[id].full); })();
+    const blend = new Array(n).fill(null), blendLiq = new Array(n).fill(null);
+    for(let i=0;i<n;i++){ const vals=blendIds.map(id=>perModel[id].snow[i]).filter(v=>v!=null); if(vals.length) blend[i] = state.prefs.blendMode==='median'? median(vals) : mean(vals); const lv=blendIds.map(id=>perModel[id].liq[i]).filter(v=>v!=null); if(lv.length) blendLiq[i]=mean(lv); }
+    const sum=(arr,a,b)=>{ let s=0; for(let i=a;i<Math.min(b,n);i++) s+=arr[i]||0; return s; };
+    const fullIds = Object.keys(perModel).filter(id=>perModel[id].full);
+    const totals7 = fullIds.map(id=>perModel[id].d7).filter(v=>v!=null);
+    const d7 = sum(blend,startIdx,n), d3=sum(blend,startIdx,startIdx+72), d1=sum(blend,startIdx,startIdx+24);
+    const mn = totals7.length? Math.min(...totals7):null, mx = totals7.length? Math.max(...totals7):null;
+    const rel = (mx!=null && d7>0)? (mx-mn)/Math.max(d7,1) : 0;
+    const conf = d7<1 ? {t:'dry', cls:'neutral', rel} : rel<0.5 ? {t:'high', cls:'high', rel} : rel<1.0 ? {t:'medium', cls:'med', rel} : {t:'low', cls:'low', rel};
+    // daily buckets (local days)
+    const days = []; const dayOf = times.map(t=>dayIndex(t, state.offset));
+    const uniq = [...new Set(dayOf.slice(startIdx))];
+    const pres = ['ecmwf_ifs025','gfs_global'].map(id=>perModel[id]).filter(p=>p && p.h.wind_direction_700hPa)[0];
+    const presSrc = pres? MODELS.find(m=>perModel[m.id]===pres).short : null;
+    for(const d of uniq){
+      const idx = []; for(let i=startIdx;i<n;i++) if(dayOf[i]===d) idx.push(i);
+      const first = times[idx[0]];
+      const byModel = {}; for(const id in perModel){ const p=perModel[id]; let s=0, any=false; idx.forEach(i=>{ if(p.snow[i]!=null){ s+=p.snow[i]; any=true; } }); byModel[id]= any? s : null; }
+      const bl = idx.reduce((s,i)=>s+(blend[i]||0),0);
+      const liq = idx.reduce((s,i)=>s+(blendLiq[i]||0),0);
+      let flow=null, rh=null, t700=null, t2=null, fzl=null, slrM=null, snowHours=0, peak=0, peakT=null, gust=null, h500=null;
+      idx.forEach(i=>{ if((blend[i]||0)>=0.1) snowHours++; if((blend[i]||0)>peak){ peak=blend[i]; peakT=times[i]; } });
+      if(pres){
+        const h=pres.h; const snowW=idx.map(i=>{ const j=pres.map.get(times[i]); return j==null?0:Math.max(h.snowfall?h.snowfall[j]:0,0); }); const anySnow=snowW.some(v=>v>0); const w=idx.map((i,k)=>{ const j=pres.map.get(times[i]); return j==null?0:((anySnow? snowW[k] : Math.max(h.precipitation?h.precipitation[j]:0,0))+0.001); });
+        const dirs=idx.map(i=>{ const j=pres.map.get(times[i]); return j==null?null:h.wind_direction_700hPa[j]; });
+        const spds=idx.map(i=>{ const j=pres.map.get(times[i]); return j==null?null:h.wind_speed_700hPa[j]; });
+        flow = vecMean(dirs, spds, w);
+        const wm=(arr)=>{ let s=0,W=0; idx.forEach((i,k)=>{ const j=pres.map.get(times[i]); if(j==null||!arr||arr[j]==null) return; s+=arr[j]*w[k]; W+=w[k]; }); return W? s/W : null; };
+        rh = wm(h.relative_humidity_700hPa); t700 = wm(h.temperature_700hPa); t2 = wm(h.temperature_2m); fzl = wm(h.freezing_level_height);
+        if(fzl==null){ // freezing level from whichever model carries it (ECMWF open data often lacks it)
+          const alt=['gfs_global','icon_seamless','gem_seamless','ncep_nbm_conus'].map(id=>perModel[id]).find(p=>p&&p.h.freezing_level_height&&p.h.freezing_level_height.some(v=>v!=null));
+          if(alt){ let s=0,W=0; idx.forEach((i,k)=>{ const j=alt.map.get(times[i]); const v=j==null?null:alt.h.freezing_level_height[j]; if(v==null) return; s+=v*w[k]; W+=w[k]; }); fzl = W? s/W : null; }
+        }
+        const sl = idx.map(i=>{ const j=pres.map.get(times[i]); return j==null?null:pres.slr[i]; }).filter(v=>v!=null); slrM = sl.length? mean(sl) : null;
+        if(h.wind_gusts_10m){ const g=idx.map(i=>{ const j=pres.map.get(times[i]); return j==null?null:h.wind_gusts_10m[j]; }).filter(v=>v!=null); gust = g.length? Math.max(...g) : null; }
+        if(h.geopotential_height_500hPa){ h500 = wm(h.geopotential_height_500hPa); }
+      }
+      days.push({d, t:first, label:fmtDay(first), blend:bl, liq, byModel, flow, rh, t700, t2, fzl, slr:slrM, snowHours, peak, peakT, gust, h500, fit: flow? fitScore(loc, flow.dir, flow.steady, flow.spd) : null});
+    }
+    // overall flow during snow (precip-weighted over 7 days)
+    const wDays = days.map(x=>x.blend+0.01);
+    const flow7 = days.some(x=>x.flow)? vecMean(days.map(x=>x.flow?x.flow.dir:null), days.map(x=>x.flow?x.flow.spd:null), wDays) : null;
+    const fit7 = flow7? ((flow7.steady<0.35||flow7.spd<6) ? 0 : (()=>{ let s=0,W=0; days.forEach((x,k)=>{ if(x.fit==null) return; s+=x.fit*wDays[k]; W+=wDays[k]; }); return W? s/W : null; })()) : null;
+    const slr7 = (()=>{ let s=0,W=0; days.forEach(x=>{ if(x.slr==null) return; s+=x.slr*x.blend; W+=x.blend; }); return W? s/W : null; })();
+    const t7000 = (()=>{ let s=0,W=0; days.forEach(x=>{ if(x.t700==null) return; s+=x.t700*(x.blend+0.01); W+=x.blend+0.01; }); return W? s/W : null; })();
+    const fzl7 = (()=>{ let s=0,W=0; days.forEach(x=>{ if(x.fzl==null) return; s+=x.fzl*(x.blend+0.01); W+=x.blend+0.01; }); return W? s/W : null; })();
+    const rh7 = (()=>{ let s=0,W=0; days.forEach(x=>{ if(x.rh==null) return; s+=x.rh*(x.blend+0.01); W+=x.blend+0.01; }); return W? s/W : null; })();
+    const liq7 = sum(blendLiq,startIdx,n);
+    // 500 mb trough passage (height minimum) and gust max
+    let trough=null, gust7=null;
+    if(pres && pres.h.geopotential_height_500hPa){ let minV=Infinity, minT=null, maxV=-Infinity; for(let i=startIdx;i<n;i++){ const j=pres.map.get(times[i]); if(j==null) continue; const v=pres.h.geopotential_height_500hPa[j]; if(v==null) continue; if(v<minV){ minV=v; minT=times[i]; } if(v>maxV) maxV=v; } if(minT!=null) trough={t:minT, min:minV, drop:maxV-minV}; }
+    if(pres && pres.h.wind_gusts_10m){ let g=0; for(let i=startIdx;i<n;i++){ const j=pres.map.get(times[i]); if(j!=null && pres.h.wind_gusts_10m[j]>g) g=pres.h.wind_gusts_10m[j]; } gust7=g; }
+    // wettest / driest model
+    let wet=null, dry=null; fullIds.forEach(id=>{ const v=perModel[id].d7; if(v==null) return; if(!wet||v>perModel[wet].d7) wet=id; if(!dry||v<perModel[dry].d7) dry=id; });
+    // Powder score 0–100: how good the skiing is likely to be in the next 72 h
+    const gustIn3 = (()=>{ if(!pres||!pres.h.wind_gusts_10m) return null; let g=0; for(let i=startIdx;i<Math.min(n,startIdx+72);i++){ const j=pres.map.get(times[i]); if(j!=null&&(blend[i]||0)>0.05&&pres.h.wind_gusts_10m[j]>g) g=pres.h.wind_gusts_10m[j]; } return g; })();
+    const slr3 = (()=>{ let s=0,W=0; days.slice(0,3).forEach(x=>{ if(x.slr==null) return; s+=x.slr*x.blend; W+=x.blend; }); return W? s/W : null; })();
+    const powder = { snow: Math.min(1, d3/18)*45, ratio: slr3==null? 10 : Math.max(0,Math.min(1,(slr3-8)/10))*20, wind: gustIn3==null? 8 : gustIn3<25? 15 : gustIn3<40? 8 : 0, conf: conf.cls==='high'?12:conf.cls==='med'?7:conf.cls==='neutral'?4:2, fit: fit7==null? 4 : (fit7+1)/2*8 };
+    powder.total = Math.round(powder.snow+powder.ratio+powder.wind+powder.conf+powder.fit); powder.gust=gustIn3; powder.slr3=slr3;
+    state.derived[loc.id] = {times, startIdx, n, perModel, blend, blendLiq, d1, d3, d7, liq7, mn, mx, conf, days, flow7, fit7, slr7, t7000, fzl7, rh7, wet, dry, presSrc, nModels: fullIds.length, trough, gust7, powder, pres};
+  });
+}
+
+/* ---------- Ensemble (on demand) ---------- */
+async function fetchEnsemble(loc){
+  if(state.ens[loc.id]) return state.ens[loc.id];
+  const out = {};
+  for(const em of [{id:'ecmwf_ifs025', ids:['ecmwf_ifs025_ensemble','ecmwf_ifs025'], name:'ECMWF ENS (51 members)'},{id:'gfs025', ids:['ncep_gefs025','gfs025'], name:'GEFS (31 members)'}]){
+    try{
+      let j=null, lastErr=null;
+      for(const mid of em.ids){ for(const elev of [true,false]){ try{ const p = new URLSearchParams({latitude:loc.lat, longitude:loc.lon, hourly:'snowfall,temperature_2m', models:mid, timezone:TZ, timeformat:'unixtime', forecast_days:'7', temperature_unit:'fahrenheit', precipitation_unit:'inch'}); if(elev) p.set('elevation', Math.round(loc.midFt*0.3048)); j = await fetchJson('https://ensemble-api.open-meteo.com/v1/ensemble?'+p); break; }catch(e){ lastErr=e; } } if(j) break; }
+      if(!j) throw lastErr||new Error('ensemble unavailable');
+      const h=j.hourly; const keys=Object.keys(h).filter(k=>k.startsWith('snowfall'));
+      const D = state.derived[loc.id]; const t0 = D.times[D.startIdx];
+      const members = keys.map(k=>{ const suf=k.replace('snowfall',''); const temp=h['temperature_2m'+suf]||h.temperature_2m; const cum=[]; let s=0; for(let i=0;i<h.time.length;i++){ if(h.time[i]<t0){ cum.push(0); continue; } const raw=h.snowfall===undefined?null:h[k][i]; let v=0; if(raw!=null){ if(state.prefs.slrMode==='fixed') v=raw; else if(state.prefs.slrMode==='typical') v=raw/7*(loc.slrTypical||14); else { const tK=((temp&&temp[i]!=null?temp[i]:20)-32)*5/9+273.15; let slr=tK>271.16?12+2*(271.16-tK):12+(271.16-tK); slr=Math.max(5,Math.min(20,slr)); v=raw/7*slr; } } s+=v; cum.push(s); } return cum; });
+      const times=h.time; const nT=times.length;
+      const bands = times.map((t,i)=>{ const vals=members.map(m=>m[i]).sort((a,b)=>a-b); return {t, p10:quantile(vals,.1), p25:quantile(vals,.25), p50:quantile(vals,.5), p75:quantile(vals,.75), p90:quantile(vals,.9)}; });
+      const finals = members.map(m=>m[nT-1]).sort((a,b)=>a-b);
+      out[em.id] = {name:em.name, n:members.length, bands, finals, p:{p10:quantile(finals,.1), p25:quantile(finals,.25), p50:quantile(finals,.5), p75:quantile(finals,.75), p90:quantile(finals,.9)}, prob:th=>finals.filter(v=>v>=th).length/finals.length, times};
+    }catch(e){ out[em.id] = {name:em.name, err:String(e.message||e)}; }
+  }
+  state.ens[loc.id]=out; return out;
+}
+
+/* ---------- NWS ---------- */
+const NWS_HEADERS = undefined;
+async function fetchAFD(office){
+  if(state.afd[office]) return state.afd[office];
+  try{
+    const list = await fetchJson(`https://api.weather.gov/products/types/AFD/locations/${office}`);
+    const first = list['@graph'] && list['@graph'][0]; if(!first) throw new Error('no AFD listed');
+    const prod = await fetchJson(first['@id']);
+    state.afd[office] = {ok:true, issued:prod.issuanceTime, text:prod.productText};
+  }catch(e){ state.afd[office] = {ok:false, err:String(e.message||e)}; }
+  return state.afd[office];
+}
+async function fetchNwsGrid(loc){
+  if(state.nwsGrid[loc.id]) return state.nwsGrid[loc.id];
+  try{
+    const pt = await fetchJson(`https://api.weather.gov/points/${loc.lat.toFixed(4)},${loc.lon.toFixed(4)}`);
+    const grid = await fetchJson(pt.properties.forecastGridData);
+    const P = grid.properties;
+    const parse = (prop)=>{ const v=(P[prop]&&P[prop].values)||[]; return v.map(x=>{ const [start,dur]=x.validTime.split('/'); const t=Date.parse(start)/1000; const m=/P(?:(\d+)D)?T?(?:(\d+)H)?/.exec(dur||'PT1H'); const hrs=(m?((+m[1]||0)*24+(+m[2]||0)):1)||1; return {t, hrs, v:x.value}; }); };
+    const snow = parse('snowfallAmount'), qpf = parse('quantitativePrecipitation'), pop = parse('probabilityOfPrecipitation');
+    const now = state.now, end = now+7*86400;
+    const sumIn = arr => arr.filter(x=>x.t+x.hrs*3600>now && x.t<end && x.v!=null).reduce((s,x)=>s+x.v,0)/25.4;
+    const sum3 = arr => arr.filter(x=>x.t+x.hrs*3600>now && x.t<now+72*3600 && x.v!=null).reduce((s,x)=>s+x.v,0)/25.4;
+    const byDay = {}; snow.forEach(x=>{ if(x.v==null||x.t<now-6*3600) return; const d=fmtDay(x.t); byDay[d]=(byDay[d]||0)+x.v/25.4; });
+    state.nwsGrid[loc.id] = {ok:true, office:pt.properties.gridId, gridX:pt.properties.gridX, gridY:pt.properties.gridY, forecastUrl:pt.properties.forecast, snow7:sumIn(snow), snow3:sum3(snow), qpf7:sumIn(qpf), byDay, popMax: Math.max(0,...pop.filter(x=>x.t>now&&x.t<end&&x.v!=null).map(x=>x.v)), elevM: P.elevation && P.elevation.value, updated:P.updateTime};
+  }catch(e){ state.nwsGrid[loc.id] = {ok:false, err:String(e.message||e)}; }
+  return state.nwsGrid[loc.id];
+}
+
+/* ---------- SNOTEL ---------- */
+async function fetchSnotel(loc){
+  if(!loc.snotel) return null;
+  if(state.snotel[loc.id]) return state.snotel[loc.id];
+  const end = new Date(); const begin = new Date(Date.now()-9*86400000);
+  const f = d=>d.toISOString().slice(0,10);
+  try{
+    const p = new URLSearchParams({stationTriplets:loc.snotel, elements:'SNWD,WTEQ,TOBS,PREC', duration:'DAILY', beginDate:f(begin), endDate:f(end), periodRef:'END'});
+    const j = await fetchJson('https://wcc.sc.egov.usda.gov/awdbRestApi/services/v1/data?'+p);
+    const st = Array.isArray(j)? j[0] : j; const series = {};
+    (st && st.data||[]).forEach(d=>{ const code=(d.stationElement&&d.stationElement.elementCode)||d.elementCode||'?'; series[code]=(d.values||[]).map(v=>({date:v.date, v:v.value})); });
+    let name=null, elev=null; try{ const sj = await fetchJson('https://wcc.sc.egov.usda.gov/awdbRestApi/services/v1/stations?stationTriplets='+encodeURIComponent(loc.snotel)); const s0=Array.isArray(sj)?sj[0]:sj; if(s0){ name=s0.name; elev=s0.elevation; } }catch(e){}
+    state.snotel[loc.id] = {ok:true, series, name, elev};
+  }catch(e){ state.snotel[loc.id] = {ok:false, err:String(e.message||e)}; }
+  return state.snotel[loc.id];
+}
+/* ===================== UI ===================== */
+const $ = s=>document.querySelector(s); const $$ = s=>[...document.querySelectorAll(s)];
+const esc = s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const inch = (v,d)=> v==null? '—' : (v<0.05? '0' : v.toFixed(d==null?(v<10?1:0):d));
+const f0 = v=> v==null?'—':Math.round(v).toLocaleString();
+const degC = f=> f==null? null : (f-32)*5/9;
+const mFt = m=> m==null? null : m/0.3048;
+const SEQ = ['var(--seq1)','var(--seq2)','var(--seq3)','var(--seq4)','var(--seq5)','var(--seq6)','var(--seq7)'];
+const seqColor = (v, max)=>{ if(!(v>0.02)) return 'transparent'; const r=Math.min(1, v/Math.max(max,0.01)); return SEQ[Math.min(6, Math.floor(Math.pow(r,0.6)*6.999))]; };
+const SNOW_MAX_HR = 1.2; // in/hr for strip scale
+let tipEl;
+function showTip(html, x, y){ tipEl=tipEl||$('#tip'); tipEl.innerHTML=html; tipEl.style.display='block'; const w=tipEl.offsetWidth, h=tipEl.offsetHeight; let L=x+14, T=y+14; if(L+w>window.innerWidth-8) L=x-w-14; if(T+h>window.innerHeight-8) T=y-h-14; tipEl.style.left=L+'px'; tipEl.style.top=T+'px'; }
+function hideTip(){ (tipEl||$('#tip')).style.display='none'; }
+function bindTips(root){ root.querySelectorAll('[data-tip]').forEach(el=>{ el.addEventListener('pointermove', e=>showTip(el.getAttribute('data-tip'), e.clientX, e.clientY)); el.addEventListener('pointerleave', hideTip); el.addEventListener('focus', ()=>{ const r=el.getBoundingClientRect(); showTip(el.getAttribute('data-tip'), r.left+r.width/2, r.top); }); el.addEventListener('blur', hideTip); }); }
+const arrowSvg = (dir, color, size)=> dir==null? '' : `<svg class="arrow" viewBox="-10 -10 20 20" width="${size||14}" height="${size||14}" style="transform:rotate(${(dir+180)%360}deg)"><path d="M0,-8 L5,4 L0,1 L-5,4 Z" fill="${color||'currentColor'}"/></svg>`;
+// tiny daily bar sparkline (7 days)
+function sparkDays(days, w, h, max){ w=w||60; h=h||18; const m=Math.max(max||0, 0.5, ...days.map(d=>d.blend)); const bw=w/days.length; return `<svg class="spark" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" aria-hidden="true">${days.map((d,i)=>{ const bh=Math.max(d.blend>0.05?1.5:0,(d.blend/m)*(h-2)); return `<rect x="${(i*bw+1).toFixed(1)}" y="${(h-bh).toFixed(1)}" width="${(bw-2).toFixed(1)}" height="${bh.toFixed(1)}" rx="1" fill="${d.blend>0.05?seqColor(d.blend,m):'var(--line)'}"/>`; }).join('')}</svg>`; }
+
+function visibleLocations(){
+  const q=state.q.trim().toLowerCase(); const maxDrive=+state.prefs.drive;
+  return LOCATIONS.filter(l=>{
+    if(maxDrive<10 && l.driveHrs>maxDrive) return false;
+    if(state.regions.size && !state.regions.has(l.region)) return false;
+    if(q && !(l.name+' '+l.region+' '+l.state+' '+(l.aka||'')).toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+function visRows(){ return visibleLocations().map(l=>({l, D:state.derived[l.id]})).filter(x=>x.D); }
+function setStatus(cls, text){ $('#stLight').className='dot '+cls; $('#stText').textContent=text; }
+function setLoad(frac){ $('#loadbar').style.width=(frac*100)+'%'; if(frac>=1) setTimeout(()=>{ $('#loadbar').style.width='0'; },600); }
+function flowMeaning(dir){
+  const c=degToCompass(dir);
+  if(['NW','WNW','NNW'].includes(c)) return 'northwest flow: Steamboat, Winter Park, Vail and the Cottonwoods are favored';
+  if(['W'].includes(c)) return 'westerly flow: the I-70 corridor and the Wasatch; San Juans mixed';
+  if(['SW','WSW','SSW'].includes(c)) return 'southwest flow: San Juans, Wolf Creek, Telluride, Taos and southern Utah; the Front Range is shadowed';
+  if(['N','NNE','NE','ENE','E','ESE','SE'].includes(c)) return 'easterly upslope: Front Range foothills, Eldora, Loveland and the east side of Winter Park';
+  return 'southerly flow: often warm and dry west of the Divide';
+}
+
+/* ---------- Hero: storm headline + best bets ---------- */
+function renderHero(){
+  const locs=visRows(); const H=$('#hero');
+  if(!locs.length){ const any=Object.keys(state.derived).length; H.innerHTML= any? '<div class="eyebrow">This week</div><h1>No locations match the filter</h1><p>Widen the drive-time slider or clear the region chips.</p>' : '<div class="eyebrow">Powder Ledger</div><h1>Waiting for the first model pull</h1><p>This page reads a data snapshot of ECMWF, GFS, ICON, GEM, HRRR and NWS output for 50 mountains across Colorado, Utah, Wyoming and New Mexico, then explains why each one gets what it gets. No snapshot has been published yet, and a hosted page cannot call the weather services directly. Once the first snapshot lands, the storm headline, best bets, ranked ledger and animated map fill in here.</p>'; $('#bets').innerHTML=''; return; }
+  const wins=stormWindows(locs); const top=[...locs].sort((a,b)=>b.D.d7-a.D.d7)[0];
+  let head, sub;
+  if(!wins.length){ head=`Quiet week: no organized storm for the selected mountains`; sub=`Best of a dry stretch is ${top.l.name} with ${inch(top.D.d7)} in over 7 days. Check back after the 00Z and 12Z runs; patterns change fastest at day 4–6.`; }
+  else { const w=wins[0]; const firstHit = regionsFirstHit(locs, w); const first=firstHit[0], last=firstHit[firstHit.length-1];
+    head=`${wins.length>1?'Storm 1 of '+wins.length:'One storm'} arrives ${fmtDT(w.start)}${first&&last&&first.r!==last.r&&last.t-first.t>=3*3600?`, hitting ${first.r} first and reaching ${last.r} by ${fmtDT(last.t)}`:first&&last&&first.r!==last.r?`, hitting ${first.r} and ${last.r} together`:''}`;
+    sub=`${w.flow?`Steering flow at 700 mb is <b>${degToCompass(w.flow.dir)} at ${f0(w.flow.spd)} mph</b>, so ${flowMeaning(w.flow.dir)}. `:''}Biggest total in this window: <b>${esc(w.top[0].l.name)} ${inch(w.top[0].v)} in</b>. Over the full 7 days the leader is <b>${esc(top.l.name)} at ${inch(top.D.d7)} in</b> (models ${inch(top.D.mn)}–${inch(top.D.mx)}, agreement ${top.D.conf.t}).`; }
+  H.innerHTML=`<div class="grid"><div><div class="eyebrow">This week's headline · ${new Date().toLocaleDateString('en-US',{timeZone:TZ,weekday:'long',month:'short',day:'numeric'})}</div><h1>${head}</h1><p>${sub}</p></div>
+    <div class="windows">${wins.slice(0,3).map((w,i)=>`<div class="win"><b>Storm ${i+1} · ${fmtDT(w.start)} → ${fmtDT(w.end)}</b><div class="r">${Math.round((w.end-w.start)/3600)} h · ${w.flow?degToCompass(w.flow.dir)+' '+f0(w.flow.spd)+' mph at 700 mb':'flow n/a'} · top: ${w.top.slice(0,3).map(x=>esc(x.l.short||x.l.name)+' '+inch(x.v)).join(', ')}</div></div>`).join('')||'<div class="win"><b>No storm windows</b><div class="r">Nothing reaches 0.15 in/hr at any selected location.</div></div>'}</div></div>`;
+  // best bets: rank by powder score within filter
+  const bets=[...locs].sort((a,b)=>b.D.powder.total-a.D.powder.total).slice(0,4);
+  $('#bets').innerHTML = bets.map((x,i)=>{ const D=x.D,l=x.l; const fl=fitLabel(D.fit7,D.flow7); const reasons=[]; if(D.d3>=4) reasons.push(`${inch(D.d3)} in in 72 h`); if(D.powder.slr3&&D.powder.slr3>=14) reasons.push(`light ${Math.round(D.powder.slr3)}:1 snow`); else if(D.powder.slr3&&D.powder.slr3<10) reasons.push(`dense ${Math.round(D.powder.slr3)}:1 snow`); if(D.powder.gust!=null) reasons.push(D.powder.gust<25?'calm winds':D.powder.gust<40?`gusts to ${f0(D.powder.gust)} mph`:`wind-hold risk, gusts ${f0(D.powder.gust)} mph`); if(D.fit7!=null&&D.fit7>=0.4) reasons.push('terrain lines up with the flow'); if(D.fit7!=null&&D.fit7<=-0.4) reasons.push('shadowed in this flow'); reasons.push(`${D.conf.t} agreement`);
+    return `<div class="bet" tabindex="0" data-id="${l.id}"><div class="rank">#${i+1} best bet · powder score ${D.powder.total}</div><h3>${esc(l.name)} <span class="muted" style="font-size:13px;font-family:var(--body);font-weight:400">${l.state} · ${l.driveHrs} h</span></h3>
+      <div class="nums"><div class="big">${inch(D.d3)}<small> in / 72 h</small></div><div class="big" style="font-size:22px;color:var(--fg-2)">${inch(D.d7)}<small> in / 7 d</small></div>${sparkDays(D.days,70,24)}</div>
+      <div class="reason">${reasons.join(' · ')}</div><div class="pills"><span class="pill ${D.conf.cls}">${D.conf.t}</span><span class="pill ${fl.cls}">${D.flow7?degToCompass(D.flow7.dir)+' · ':''}${fl.t}</span></div></div>`; }).join('');
+  $$('#bets .bet').forEach(b=>{ b.onclick=()=>openDetail(b.dataset.id); b.onkeydown=e=>{ if(e.key==='Enter') openDetail(b.dataset.id); }; });
+}
+function regionsFirstHit(locs, w){
+  const D0=locs[0].D; const a=D0.times.findIndex(t=>t>=w.start), b=D0.times.findIndex(t=>t>=w.end); const byR={};
+  locs.forEach(x=>{ for(let i=Math.max(0,a);i<(b<0?D0.n:b);i++){ if((x.D.blend[i]||0)>=0.1){ const t=D0.times[i]; if(byR[x.l.region]==null||t<byR[x.l.region]) byR[x.l.region]=t; break; } } });
+  return Object.entries(byR).map(([r,t])=>({r,t})).sort((p,q)=>p.t-q.t);
+}
+
+/* ---------- Stats ---------- */
+function renderStats(){
+  const locs=visRows(); if(!locs.length){ $('#stats').innerHTML=''; return; }
+  const top=[...locs].sort((a,b)=>b.D.d7-a.D.d7)[0]; const top3=[...locs].sort((a,b)=>b.D.d3-a.D.d3)[0];
+  const snowing=locs.filter(x=>x.D.d7>=6).length;
+  const avgConf = mean(locs.filter(x=>x.D.d7>=3).map(x=>x.D.conf.rel));
+  const flows = locs.map(x=>x.D.flow7).filter(Boolean); const fl = flows.length? vecMean(flows.map(f=>f.dir), flows.map(f=>f.spd)) : null;
+  const okModels = MODELS.filter(m=>state.models[m.id]&&state.models[m.id].ok);
+  const age = Math.round((Date.now()-Math.max(...okModels.map(m=>state.models[m.id].fetchedAt||0)))/60000);
+  const troughs = locs.map(x=>x.D.trough).filter(Boolean); const tr = troughs.length? median(troughs.map(t=>t.t)) : null;
+  const cards = [
+    {label:'Biggest 7-day total', value:`${inch(top.D.d7)}<small> in</small> ${sparkDays(top.D.days,56,20)}`, sub:`${top.l.name} · models ${inch(top.D.mn)}–${inch(top.D.mx)} in`},
+    {label:'Biggest next 72 h', value:`${inch(top3.D.d3)}<small> in</small> ${sparkDays(top3.D.days.slice(0,3),30,20)}`, sub:`${top3.l.name}`},
+    {label:'Locations with 6 in+ this week', value:`${snowing}<small> of ${locs.length}</small>`, sub: snowing? 'click a row for the reasoning' : 'quiet week in this filter'},
+    {label:'Prevailing 700 mb flow during snow', value: fl? `${degToCompass(fl.dir)}<small> ${f0(fl.spd)} mph</small>` : '—', sub: fl? flowMeaning(fl.dir) : 'no pressure-level data loaded'},
+    {label:'500 mb trough axis passes', value: tr? `${fmtDT(tr)}` : '—', sub: tr? 'median across selected locations; snow usually peaks just ahead of it' : 'needs ECMWF or GFS 500 mb heights'},
+    {label:'Model agreement', value: avgConf==null? '—' : (avgConf<0.5?'High':avgConf<1?'Mixed':'Low'), sub: avgConf==null? 'too little snow to judge' : `avg spread ${Math.round(avgConf*100)}% of the blended total`},
+    {label:'Models loaded', value:`${okModels.length}<small> of ${MODELS.length}</small>`, sub: okModels.map(m=>m.short).join(' · ')+(isFinite(age)?` · ${age} min ago`:'')},
+  ];
+  $('#stats').innerHTML = cards.map(c=>`<div class="stat"><div class="label">${c.label}</div><div class="value">${c.value}</div><div class="sub" title="${esc(c.sub)}">${c.sub}</div></div>`).join('');
+}
+
+/* ---------- Ledger table ---------- */
+const COLS = [
+  {k:'name', t:'Location'}, {k:'driveHrs', t:'Drive', num:true, w:'Drive hours from Denver (approx.)'},
+  {k:'d1', t:'24 h', num:true}, {k:'d3', t:'72 h', num:true}, {k:'d7', t:'7 day', num:true, w:'Blended 7-day snowfall (inches) with daily bars'},
+  {k:'range', t:'Model range', w:'Lowest and highest 7-day total among the global models'},
+  {k:'conf', t:'Agreement', w:'How tightly the models agree'},
+  {k:'powder', t:'Powder', num:true, w:'Powder score 0–100 for the next 72 h: snow amount, ratio, wind, agreement and flow fit'},
+  {k:'fit', t:'Flow fit', w:'700 mb wind direction during snow vs. this mountain\'s favored directions'},
+  {k:'slr', t:'Ratio', num:true, w:'Estimated snow-to-liquid ratio (higher = lighter snow)'},
+  {k:'snowlvl', t:'Snow level', num:true, w:'Estimated snow level (ft) during precipitation vs base elevation'},
+  {k:'gust', t:'Gusts', num:true, w:'Peak 10 m wind gust in the next 7 days (lift holds above ~40 mph)'},
+];
+function sortVal(x,k){ const D=x.D,l=x.l; switch(k){ case 'name': return l.name; case 'driveHrs': return l.driveHrs; case 'range': return D.mx; case 'conf': return D.conf.rel; case 'powder': return D.powder.total; case 'fit': return D.fit7==null?-9:D.fit7; case 'slr': return D.slr7||0; case 'snowlvl': return D.fzl7||0; case 'gust': return D.gust7||0; default: return D[k]; } }
+function renderLedger(){
+  const rows=visRows();
+  rows.sort((a,b)=>{ const va=sortVal(a,state.sortKey), vb=sortVal(b,state.sortKey); const c = typeof va==='string'? va.localeCompare(vb) : (va-vb); return state.sortDir==='asc'? c : -c; });
+  const maxD7 = Math.max(1,...rows.map(x=>x.D.d7));
+  $('#ledger thead').innerHTML = '<tr>'+COLS.map(c=>`<th class="${c.num?'num':''}" data-k="${c.k}" ${state.sortKey===c.k?`aria-sort="${state.sortDir==='asc'?'ascending':'descending'}"`:''} title="${esc(c.w||'')}">${c.t}</th>`).join('')+'</tr>';
+  $('#ledger tbody').innerHTML = rows.map(({l,D})=>{
+    const fl=fitLabel(D.fit7,D.flow7); const sl = D.fzl7!=null? mFt(D.fzl7)-1000 : null; const slCls = sl==null?'': sl>l.baseFt? 'low' : sl>l.baseFt-1500? 'med':'high';
+    return `<tr class="row" tabindex="0" data-id="${l.id}" aria-selected="${state.selected===l.id}">
+      <td><span class="name">${esc(l.name)}<span class="st">${l.state}</span></span><br><span class="region">${esc(l.region)} · ${f0(l.summitFt)} ft</span></td>
+      <td class="num mono">${l.driveHrs}h</td>
+      <td class="num mono">${inch(D.d1)}</td><td class="num mono">${inch(D.d3)}</td>
+      <td class="num" style="white-space:nowrap">${sparkDays(D.days,56,16,maxD7/2.5)} <b class="mono">${inch(D.d7)}</b></td>
+      <td><span class="range mono">${inch(D.mn)}–${inch(D.mx)}</span></td>
+      <td><span class="pill ${D.conf.cls}">${D.conf.t}</span></td>
+      <td class="num"><span class="meter" data-tip="${esc(`<b>Powder score ${D.powder.total}</b><br>snow ${Math.round(D.powder.snow)}/45 · ratio ${Math.round(D.powder.ratio)}/20 · wind ${Math.round(D.powder.wind)}/15 · agreement ${D.powder.conf}/12 · flow fit ${Math.round(D.powder.fit)}/8`)}"><i><b style="width:${D.powder.total}%"></b></i><span class="mono">${D.powder.total}</span></span></td>
+      <td><span class="fit">${D.flow7? arrowSvg(D.flow7.dir,'currentColor'):''}<span class="pill ${fl.cls}">${D.flow7? degToCompass(D.flow7.dir)+' · ':''}${fl.t}</span></span></td>
+      <td class="num mono">${D.slr7? Math.round(D.slr7)+':1' : '—'}</td>
+      <td class="num mono"><span class="pill ${slCls}">${sl==null?'—': f0(sl)+' ft'}</span></td>
+      <td class="num mono">${D.gust7!=null? `<span class="${D.gust7>=40?'pill low':''}">${f0(D.gust7)}</span>` : '—'}</td>
+    </tr>`; }).join('') || `<tr><td colspan="12" class="muted" style="padding:20px">${Object.keys(state.derived).length?'No locations match the filter.':'Waiting for data.'}</td></tr>`;
+  $$('#ledger th').forEach(th=>th.onclick=()=>{ const k=th.dataset.k; if(state.sortKey===k) state.sortDir=state.sortDir==='asc'?'desc':'asc'; else { state.sortKey=k; state.sortDir = k==='name'||k==='driveHrs'?'asc':'desc'; } renderLedger(); });
+  $$('#ledger tr.row').forEach(tr=>{ tr.onclick=()=>openDetail(tr.dataset.id); tr.onkeydown=e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); openDetail(tr.dataset.id);} }; });
+  bindTips($('#ledger'));
+}
+
+/* ---------- Map ---------- */
+const MAP = {lon0:-114.4, lon1:-103.6, lat0:35.5, lat1:44.1, W:820, H:0};
+MAP.H = Math.round(MAP.W*(MAP.lat1-MAP.lat0)/((MAP.lon1-MAP.lon0)*Math.cos(39*Math.PI/180)));
+const px = lon=> (lon-MAP.lon0)/(MAP.lon1-MAP.lon0)*MAP.W;
+const py = lat=> (MAP.lat1-lat)/(MAP.lat1-MAP.lat0)*MAP.H;
+const ROADS = {
+  'I-70':[[-104.99,39.74],[-105.51,39.74],[-106.07,39.63],[-106.37,39.64],[-107.32,39.55],[-108.55,39.06],[-110.16,38.99],[-111.86,38.96],[-112.58,38.60]],
+  'I-15':[[-113.58,37.10],[-113.06,37.68],[-112.64,38.28],[-112.58,38.60],[-111.84,39.71],[-111.66,40.23],[-111.89,40.76],[-111.97,41.22],[-112.02,41.51],[-112.10,42.0]],
+  'I-80':[[-111.89,40.76],[-111.50,40.72],[-110.96,41.27],[-109.20,41.59],[-107.24,41.79],[-105.59,41.31],[-104.82,41.14]],
+  'I-25':[[-104.82,41.14],[-104.99,39.74],[-104.82,38.83],[-104.61,38.25],[-104.50,37.17],[-104.44,36.90],[-105.94,35.69]],
+  'US-160':[[-104.78,37.63],[-105.87,37.47],[-106.80,37.48],[-107.01,37.27],[-107.88,37.28],[-108.59,37.35]],
+  'US-550':[[-107.88,37.28],[-107.66,37.81],[-107.67,38.02],[-107.88,38.48],[-108.55,39.06]],
+  'US-285':[[-104.99,39.74],[-105.50,39.50],[-106.00,39.22],[-106.13,38.84],[-106.08,38.51],[-106.14,38.09],[-105.87,37.47]],
+  'US-40':[[-105.51,39.74],[-105.78,39.80],[-105.93,40.08],[-106.62,40.38],[-106.83,40.49],[-107.63,40.52]],
+  'US-6':[[-105.87,39.66],[-105.90,39.68]],
+};
+const RANGES=[{n:'WASATCH',lat:41.0,lon:-111.62},{n:'UINTAS',lat:40.72,lon:-110.6},{n:'SAN JUANS',lat:37.72,lon:-107.4},{n:'SAWATCH',lat:38.95,lon:-106.45},{n:'ELKS',lat:39.05,lon:-107.15},{n:'FRONT RANGE',lat:40.15,lon:-105.62},{n:'PARK RANGE',lat:40.72,lon:-106.72},{n:'SANGRE DE CRISTO',lat:36.95,lon:-105.25},{n:'TETONS',lat:43.65,lon:-110.75},{n:'GRAND MESA',lat:39.0,lon:-107.95},{n:'MEDICINE BOW',lat:41.45,lon:-106.3},{n:'TUSHARS',lat:38.35,lon:-112.4},{n:'MARKAGUNT',lat:37.6,lon:-112.85}];
+let mapTimer=null;
+function renderMapDays(){
+  const D=state.derived[LOCATIONS[0].id]; if(!D) return;
+  const days=D.days;
+  $('#mapDays').innerHTML = `<button class="play" id="mapPlay" title="Animate day by day">${mapTimer?'■ Stop':'▶ Play'}</button><button aria-pressed="${state.mapDay==='all'}" data-d="all">7-day total</button>`+days.map(d=>`<button aria-pressed="${state.mapDay===d.d}" data-d="${d.d}">${d.label.split(',')[0]}</button>`).join('');
+  $$('#mapDays button[data-d]').forEach(b=>b.onclick=()=>{ stopMap(); state.mapDay = b.dataset.d==='all'?'all':+b.dataset.d; renderMapDays(); renderMap(); });
+  $('#mapPlay').onclick=()=>{ if(mapTimer){ stopMap(); renderMapDays(); return; } let k=0; const step=()=>{ state.mapDay=days[k%days.length].d; k++; renderMapDays(); renderMap(); }; step(); mapTimer=setInterval(step, 1100); renderMapDays(); };
+}
+function stopMap(){ if(mapTimer){ clearInterval(mapTimer); mapTimer=null; } }
+function dayVal(D, dKey){ if(dKey==='all') return {snow:D.d7, flow:D.flow7, fit:D.fit7}; const d=D.days.find(x=>x.d===dKey); return d? {snow:d.blend, flow:d.flow, fit:d.fit} : {snow:0}; }
+function renderMap(){
+  const vals=visRows().map(x=>Object.assign(x, dayVal(x.D,state.mapDay)));
+  const max=Math.max(2,...vals.map(v=>v.snow||0));
+  const rect=(a,b,c,d)=>`M${px(a)},${py(b)}L${px(c)},${py(b)}L${px(c)},${py(d)}L${px(a)},${py(d)}Z`;
+  const states = `<rect class="mapbg" x="0" y="0" width="${MAP.W}" height="${MAP.H}" rx="8"/>
+    <path d="${rect(-109.05,41,-102.05,37)}" fill="none" stroke="var(--axis)" stroke-width="1.2"/>
+    <path d="M${px(-114.05)},${py(42)}L${px(-111.05)},${py(42)}L${px(-111.05)},${py(41)}L${px(-109.05)},${py(41)}L${px(-109.05)},${py(37)}L${px(-114.05)},${py(37)}Z" fill="none" stroke="var(--axis)" stroke-width="1.2"/>
+    <path d="${rect(-111.05,45,-104.05,41)}" fill="none" stroke="var(--axis)" stroke-width="1.2"/>
+    <path d="${rect(-109.05,37,-103.0,31.3)}" fill="none" stroke="var(--axis)" stroke-width="1.2"/>
+    <text x="${px(-106.9)}" y="${py(37.2)}" fill="var(--fg-3)" font-size="11" font-family="var(--display)" letter-spacing="3">COLORADO</text>
+    <text x="${px(-113.9)}" y="${py(37.2)}" fill="var(--fg-3)" font-size="11" font-family="var(--display)" letter-spacing="3">UTAH</text>
+    <text x="${px(-108.9)}" y="${py(42.6)}" fill="var(--fg-3)" font-size="11" font-family="var(--display)" letter-spacing="3">WYOMING</text>
+    <text x="${px(-107.2)}" y="${py(35.75)}" fill="var(--fg-3)" font-size="11" font-family="var(--display)" letter-spacing="3">NEW MEXICO</text>`;
+  const roads = Object.entries(ROADS).map(([n,pts])=>`<path d="M${pts.map(p=>`${px(p[0]).toFixed(1)},${py(p[1]).toFixed(1)}`).join('L')}" fill="none" stroke="var(--road)" stroke-width="${n.startsWith('I-')?2:1.2}" stroke-linejoin="round" stroke-linecap="round" data-tip="${n}"/>`).join('');
+  const ranges = RANGES.map(r=>`<text x="${px(r.lon)}" y="${py(r.lat)}" text-anchor="middle" font-size="8.5" fill="var(--range)" letter-spacing="1.5" font-family="var(--display)">${r.n}</text>`).join('');
+  const cities = [{n:'Denver',lat:39.739,lon:-104.990},{n:'Salt Lake City',lat:40.761,lon:-111.891},{n:'Grand Junction',lat:39.064,lon:-108.550},{n:'Durango',lat:37.275,lon:-107.880},{n:'Laramie',lat:41.31,lon:-105.59},{n:'Santa Fe',lat:35.69,lon:-105.94}].map(c=>`<g><rect x="${px(c.lon)-3}" y="${py(c.lat)-3}" width="6" height="6" fill="var(--fg-2)"/><text x="${px(c.lon)+7}" y="${py(c.lat)+4}" font-size="10" fill="var(--fg-2)">${c.n}</text></g>`).join('');
+  const labelSet = new Set([...vals].sort((a,b)=>(b.snow||0)-(a.snow||0)).slice(0,10).map(v=>v.l.id));
+  const dots = vals.sort((a,b)=>(a.snow||0)-(b.snow||0)).map(v=>{
+    const r = 4+Math.sqrt((v.snow||0)/max)*17; const x=px(v.l.lon), y=py(v.l.lat); const col=seqColor(v.snow,max); const heavy=(v.snow||0)>=max*0.6;
+    const arrow = v.flow? `<g transform="translate(${x},${y}) rotate(${(v.flow.dir+180)%360})"><line x1="0" y1="${-r-2}" x2="0" y2="${-r-6-Math.min(18,v.flow.spd/3)}" stroke="var(--fg-2)" stroke-width="1.5"/><path d="M-3,${-r-4-Math.min(18,v.flow.spd/3)} L0,${-r-8-Math.min(18,v.flow.spd/3)} L3,${-r-4-Math.min(18,v.flow.spd/3)}" fill="none" stroke="var(--fg-2)" stroke-width="1.5"/></g>` : '';
+    const tip = `<b>${esc(v.l.name)}</b> ${v.l.state}<br>${state.mapDay==='all'?'7-day':'day'} blended: <b>${inch(v.snow)} in</b>${v.flow?`<br>700 mb flow: ${degToCompass(v.flow.dir)} ${f0(v.flow.spd)} mph · ${fitLabel(v.fit,v.flow).t}`:''}<br><span class="muted">click for the why</span>`;
+    return `<g class="loc" tabindex="0" data-id="${v.l.id}" data-tip="${esc(tip)}" style="cursor:pointer">${arrow}${heavy?`<circle cx="${x}" cy="${y}" r="${r+6}" fill="${col}" opacity=".25" filter="url(#glow)"/>`:''}<circle cx="${x}" cy="${y}" r="${r}" fill="${col==='transparent'?'var(--panel)':col}" stroke="var(--fg-2)" stroke-width="1" fill-opacity="${col==='transparent'?1:.9}"/>${(labelSet.has(v.l.id)&&(v.snow||0)>0.5)||v.l.pin?`<text x="${x}" y="${y-r-(v.flow?12:4)}" text-anchor="middle" font-size="10" font-weight="600" fill="var(--fg)" paint-order="stroke" stroke="var(--panel)" stroke-width="3">${esc(v.l.short||v.l.name)}</text>`:''}</g>`;
+  }).join('');
+  const dayLabel = state.mapDay==='all'? '7-day total' : (vals[0]&&vals[0].D.days.find(d=>d.d===state.mapDay)||{}).label||'';
+  $('#map').innerHTML = `<svg viewBox="0 0 ${MAP.W} ${MAP.H}" role="img" aria-label="Map of forecast snowfall"><defs><filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6"/></filter></defs>${states}${roads}${ranges}${cities}${dots}<text x="${MAP.W-10}" y="22" text-anchor="end" font-family="var(--display)" font-size="20" font-weight="700" fill="var(--fg)">${esc(dayLabel)}</text></svg>`;
+  $('#mapLegend').innerHTML = `<span>Dot size and shade = blended snowfall (max ${inch(max)} in)</span><span><span class="sw" style="background:var(--seq2)"></span>light</span><span><span class="sw" style="background:var(--seq4)"></span>moderate</span><span><span class="sw" style="background:var(--seq7)"></span>heavy</span><span>→ arrow = where the 700 mb wind blows during precipitation (length = speed)</span><span><span class="ln" style="background:var(--road)"></span>interstates and highways</span>`;
+  bindTips($('#map'));
+  $$('#map .loc').forEach(g=>{ g.onclick=()=>openDetail(g.dataset.id); g.onkeydown=e=>{ if(e.key==='Enter') openDetail(g.dataset.id); }; });
+}
+
+/* ---------- Pattern read ---------- */
+function renderPattern(){
+  const locs=visRows(); if(!locs.length){ $('#pattern').innerHTML=''; return; }
+  const byRegion={}; locs.forEach(x=>{ (byRegion[x.l.region]=byRegion[x.l.region]||[]).push(x); });
+  const regs=Object.entries(byRegion).map(([r,xs])=>({r, avg:mean(xs.map(x=>x.D.d7)), top:[...xs].sort((a,b)=>b.D.d7-a.D.d7)[0]})).sort((a,b)=>b.avg-a.avg);
+  const windows = stormWindows(locs); const parts=[];
+  if(regs.length){ const w=regs[0], d=regs[regs.length-1]; parts.push(`<p><b>Who wins this week:</b> ${esc(w.r)} averages <b>${inch(w.avg)} in</b> across its locations (best: ${esc(w.top.l.name)}, ${inch(w.top.D.d7)} in). ${regs.length>1?`${esc(d.r)} is the quietest at ${inch(d.avg)} in.`:''}</p>`); }
+  if(windows.length){ parts.push(`<p><b>Storm windows:</b> `+windows.map((w,i)=>`${i+1}) ${fmtDT(w.start)} → ${fmtDT(w.end)}${w.flow?` on ${degToCompass(w.flow.dir)} 700 mb flow (${f0(w.flow.spd)} mph)`:''}, biggest at ${esc(w.top[0].l.name)} (${inch(w.top[0].v)} in)`).join('; ')+`.</p>`); }
+  else parts.push('<p><b>Storm windows:</b> no organized storm (≥0.15 in/hr anywhere) in the next 7 days for the selected locations.</p>');
+  const tr=locs.map(x=>x.D.trough).filter(t=>t&&t.drop>40); if(tr.length){ const med=median(tr.map(t=>t.t)); const drop=mean(tr.map(t=>t.drop)); parts.push(`<p><b>Upper-air trough:</b> 500 mb heights bottom out around <b>${fmtDT(med)}</b> (a ${f0(drop)} m dip, ${drop>120?'a deep, well-defined trough':drop>70?'a moderate trough':'a weak wave'}). Snow is heaviest in the moist SW-to-W flow ahead of the axis and turns to colder, lighter NW-flow snow behind it.</p>`); }
+  const fits=locs.filter(x=>x.D.fit7!=null && x.D.d7>=2); if(fits.length){ const fav=fits.filter(x=>x.D.fit7>=0.4).map(x=>x.l.name).slice(0,6), sh=fits.filter(x=>x.D.fit7<=-0.4).map(x=>x.l.name).slice(0,6);
+    parts.push(`<p><b>Orographics:</b> ${fav.length?`the forecast flow lines up with the terrain at ${fav.map(esc).join(', ')}`:'no location has a strongly favorable flow'}${sh.length?`; ${sh.map(esc).join(', ')} sit in the rain shadow for this direction`:''}. Expect models to under-forecast favored slopes and over-forecast shadowed ones; coarse global grids smear precipitation across ranges.</p>`); }
+  const cold=locs.filter(x=>x.D.t7000!=null&&x.D.d7>=2); if(cold.length){ const t=mean(cold.map(x=>x.D.t7000)); const s=mean(cold.map(x=>x.D.slr7).filter(Boolean)); parts.push(`<p><b>Snow quality:</b> 700 mb temperatures average <b>${f0(t)}°F (${f0(degC(t))}°C)</b> during snow → estimated ratios around <b>${s?Math.round(s):'—'}:1</b>. ${degC(t)<=-10?'Cold enough for low-density powder (dendrites grow best at −12 to −18 °C).':degC(t)<=-5?'Moderate density; good right-side-up snow.':'Warm storm: dense, heavy snow and possible rain at the bases.'}</p>`); }
+  const windy=locs.filter(x=>x.D.gust7>=45).map(x=>`${esc(x.l.name)} (${f0(x.D.gust7)} mph)`).slice(0,5); if(windy.length) parts.push(`<p><b>Wind:</b> gusts above 45 mph at ${windy.join(', ')}. Expect wind holds on exposed lifts and wind-affected snow on ridgelines.</p>`);
+  const disagree=locs.filter(x=>x.D.conf.cls==='low'&&x.D.d7>=3).map(x=>`${esc(x.l.name)} (${inch(x.D.mn)}–${inch(x.D.mx)})`).slice(0,5); if(disagree.length) parts.push(`<p><b>Low confidence:</b> models disagree most at ${disagree.join(', ')}. Load the ensemble in each location's detail before planning.</p>`);
+  $('#pattern').innerHTML=parts.join('');
+}
+function stormWindows(locs){
+  const D0=locs[0].D; const n=D0.n, t=D0.times; const inWin=new Array(n).fill(false);
+  for(let i=D0.startIdx;i<n;i++){ if(locs.some(x=>(x.D.blend[i]||0)>=0.15)) inWin[i]=true; }
+  const wins=[]; let cur=null, gap=0;
+  for(let i=D0.startIdx;i<n;i++){ if(inWin[i]){ if(!cur) cur={a:i,b:i}; cur.b=i; gap=0; } else if(cur){ gap++; if(gap>=6){ wins.push(cur); cur=null; gap=0; } } }
+  if(cur) wins.push(cur);
+  return wins.map(w=>{ const per=locs.map(x=>{ let s=0; for(let i=w.a;i<=w.b;i++) s+=x.D.blend[i]||0; return {l:x.l,v:s}; }).sort((a,b)=>b.v-a.v);
+    const fl=locs.map(x=>{ const days=x.D.days.filter(d=>d.t>=t[w.a]-86400&&d.t<=t[w.b]); return days.length&&days.some(d=>d.flow)? vecMean(days.map(d=>d.flow?d.flow.dir:null),days.map(d=>d.flow?d.flow.spd:null),days.map(d=>d.blend+0.01)) : null; }).filter(Boolean);
+    return {start:t[w.a], end:t[w.b]+3600, top:per, flow: fl.length? vecMean(fl.map(f=>f.dir), fl.map(f=>f.spd)) : null}; });
+}
+
+/* ---------- Storm timing strips ---------- */
+function renderStrips(){
+  const locs=visRows().sort((a,b)=>a.l.lon-b.l.lon);
+  if(!locs.length){ $('#stripes').innerHTML=''; $('#windows').innerHTML=''; return; }
+  const D0=locs[0].D; const a=D0.startIdx, b=D0.n; const t=D0.times;
+  let head='<div class="strip hd"><div class="lab">west → east</div><div class="cells" style="height:auto;gap:0">'; let lastD=null; const labels=[]; for(let i=a;i<b;i++){ const d=dayIndex(t[i],state.offset); if(d!==lastD){ labels.push({i, txt:fmtDay(t[i])}); lastD=d; } }
+  head += labels.map((L,k)=>{ const span=(labels[k+1]?labels[k+1].i:b)-L.i; return `<div style="grid-column:span ${span};font-size:11px;color:var(--fg-3);border-left:1px solid var(--line);padding-left:3px;white-space:nowrap;overflow:hidden">${L.txt}</div>`; }).join('')+'</div></div>';
+  const rows = locs.map(({l,D})=>{ let tot=0; const cells=[]; for(let i=a;i<b;i++){ const v=D.blend[i]||0; tot+=v; cells.push(`<i style="background:${seqColor(v,SNOW_MAX_HR)}" data-tip="${esc(`<b>${l.name}</b><br>${fmtDT(t[i])}: <b>${v.toFixed(2)} in/hr</b>`)}"></i>`); }
+    return `<div class="strip"><div class="lab" title="${esc(l.name)}"><a href="#" data-id="${l.id}" style="color:inherit;text-decoration:none">${esc(l.name)}</a> <span class="mono muted">${inch(tot)}</span></div><div class="cells">${cells.join('')}</div></div>`; }).join('');
+  $('#stripes').innerHTML=head+rows;
+  $('#stripLegend').innerHTML=`<span>in/hr:</span><span><span class="sw" style="background:var(--seq1)"></span>trace</span><span><span class="sw" style="background:var(--seq3)"></span>0.3</span><span><span class="sw" style="background:var(--seq5)"></span>0.7</span><span><span class="sw" style="background:var(--seq7)"></span>${SNOW_MAX_HR}+</span><span class="muted">A Pacific storm shows as a diagonal moving down the list.</span>`;
+  bindTips($('#stripes'));
+  $$('#stripes a').forEach(x=>x.onclick=e=>{ e.preventDefault(); openDetail(x.dataset.id); });
+  const wins=stormWindows(locs);
+  $('#windows').innerHTML = wins.length? wins.map((w,i)=>{ const fh=regionsFirstHit(locs,w); return `<div class="card" style="margin-bottom:10px"><h3>Storm ${i+1}: ${fmtDT(w.start)} → ${fmtDT(w.end)} <span class="muted small">(${Math.round((w.end-w.start)/3600)} h)</span></h3>
+    <p class="small" style="margin:6px 0">${w.flow?`Mean 700 mb flow <b>${degToCompass(w.flow.dir)}</b> at ${f0(w.flow.spd)} mph: ${flowMeaning(w.flow.dir)}.`:'No pressure-level data for this window.'}${fh.length>1?` Arrival order: ${fh.map(x=>`${esc(x.r)} ${fmtDT(x.t)}`).join(' → ')}.`:''}</p>
+    <div class="twocol"><div><div class="eyebrow">Most snow</div>${w.top.slice(0,6).map(x=>`<div style="display:flex;justify-content:space-between;gap:8px;font-size:13px"><span>${esc(x.l.name)}</span><b class="mono">${inch(x.v)} in</b></div>`).join('')}</div>
+    <div><div class="eyebrow">Least snow</div>${w.top.slice(-6).reverse().map(x=>`<div style="display:flex;justify-content:space-between;gap:8px;font-size:13px"><span>${esc(x.l.name)}</span><b class="mono">${inch(x.v)} in</b></div>`).join('')}</div></div></div>`; }).join('') : '<p class="muted">No storm windows in the next 7 days for the selected locations.</p>';
+}
+
+/* ---------- Detail drawer ---------- */
+function whyText(l, D){
+  const p=[]; const fl=fitLabel(D.fit7,D.flow7);
+  const peakDay=[...D.days].sort((a,b)=>b.blend-a.blend)[0];
+  if(D.d7<1) p.push(`<p><b>Quiet week.</b> The blended forecast gives ${esc(l.name)} under an inch over 7 days; models range ${inch(D.mn)}–${inch(D.mx)} in.</p>`);
+  else p.push(`<p><b>${inch(D.d7)} in over 7 days</b> (${state.prefs.blendMode==='mean'?'multi-model mean':state.prefs.blendMode==='median'?'multi-model median':'single model'}; range ${inch(D.mn)}–${inch(D.mx)} in across ${D.nModels} models, agreement <b>${D.conf.t}</b>). The heaviest day is <b>${peakDay.label}</b> with ${inch(peakDay.blend)} in${peakDay.peakT?`, peaking around ${fmtHour(peakDay.peakT)}`:''}. Liquid equivalent ≈ ${D.liq7.toFixed(2)} in.</p>`);
+  if(D.flow7) p.push(`<p><b>Flow:</b> during precipitation the 700 mb wind (≈10,000 ft, the steering level for Rocky Mountain snow) averages <b>${degToCompass(D.flow7.dir)} at ${f0(D.flow7.spd)} mph</b> (${D.presSrc}). ${esc(l.name)} does best on <b>${(l.favored||[]).join('/')}</b> flow${l.shadowed&&l.shadowed.length?` and is shadowed on ${l.shadowed.join('/')}`:''}, so this pattern is <b>${fl.t}</b>${D.flow7.spd<6?' (winds this light, typical under the center of a cutoff low, give little orographic push either way)':D.flow7.steady<0.35?' (the direction swings around during the event, so terrain favoritism is weak)':''}. ${l.why?esc(l.why):''}</p>`);
+  if(D.trough&&D.trough.drop>40) p.push(`<p><b>Upper air:</b> the 500 mb trough axis passes around <b>${fmtDT(D.trough.t)}</b> (heights fall ${f0(D.trough.drop)} m). Ahead of it the flow backs to SW and the air is moist; behind it the flow veers NW and turns colder, which is when NW-favored terrain gets its best snow.</p>`);
+  if(D.t7000!=null){ const c=degC(D.t7000); p.push(`<p><b>Temperature and density:</b> 700 mb temps average <b>${f0(D.t7000)}°F (${c.toFixed(0)}°C)</b> while snowing, giving an estimated ratio of <b>${D.slr7?Math.round(D.slr7):'—'}:1</b> (${c<=-10?'light, low-density powder':c<=-5?'medium density':'dense, wet snow'}). ${D.fzl7!=null?`Freezing level ≈ ${f0(mFt(D.fzl7))} ft → snow level ≈ <b>${f0(mFt(D.fzl7)-1000)} ft</b>, which is ${mFt(D.fzl7)-1000>l.baseFt?`<b>above the ${f0(l.baseFt)} ft base</b>: rain or mix low, snow only up high`:`below the ${f0(l.baseFt)} ft base: snow top to bottom`}.`:''}</p>`); }
+  if(D.rh7!=null) p.push(`<p><b>Moisture:</b> 700 mb relative humidity averages <b>${f0(D.rh7)}%</b> during snow${D.rh7>=85?' (saturated mountain layer, efficient snow production)':D.rh7>=70?' (moist but not saturated; totals depend on lift)':' (dry mid-levels; snow will be showery and hit-or-miss)'}.</p>`);
+  if(D.gust7!=null&&D.d7>=1) p.push(`<p><b>Wind:</b> peak gusts of <b>${f0(D.gust7)} mph</b> this week${D.gust7>=45?'. Expect wind holds on upper lifts and transported snow on lee aspects (avalanche loading).':D.gust7>=30?'; some ridgeline transport, sheltered trees will ski best.':'; light winds, snow should stay where it lands.'}</p>`);
+  if(D.wet&&D.dry&&D.wet!==D.dry&&D.d7>=2){ const w=MODELS.find(m=>m.id===D.wet), d=MODELS.find(m=>m.id===D.dry); p.push(`<p><b>Model spread:</b> ${w.short} is wettest at ${inch(D.perModel[D.wet].d7)} in and ${d.short} driest at ${inch(D.perModel[D.dry].d7)} in. ${D.conf.cls==='low'?'That is a big gap: the storm track or timing is unsettled, so lean on the ensemble percentiles below rather than any single run.':D.conf.cls==='med'?'Moderate spread, typical for days 3–7.':'Tight clustering, which usually means a well-handled, well-defined system.'}</p>`); }
+  p.push(`<p><b>Powder score ${D.powder.total}/100</b> for the next 72 h: snow ${Math.round(D.powder.snow)}/45, ratio ${Math.round(D.powder.ratio)}/20, wind ${Math.round(D.powder.wind)}/15, agreement ${D.powder.conf}/12, flow fit ${Math.round(D.powder.fit)}/8.</p>`);
+  return p.join('');
+}
+async function openDetail(id){
+  const l=LOCATIONS.find(x=>x.id===id), D=state.derived[id]; if(!l||!D) return;
+  state.selected=id; $$('#ledger tr.row').forEach(tr=>tr.setAttribute('aria-selected', tr.dataset.id===id));
+  const dr=$('#drawer'); dr.classList.add('open'); $('#scrim').classList.add('on'); document.body.style.overflow='hidden'; dr.scrollTop=0;
+  const el=$('#drawerInner');
+  el.innerHTML = `<div class="head"><div style="flex:1;min-width:0"><div class="eyebrow">${esc(l.region)} · ${l.state}</div><h1>${esc(l.name)}</h1>
+      <div class="facts"><span>Summit <b>${f0(l.summitFt)} ft</b></span><span>Base <b>${f0(l.baseFt)} ft</b></span><span>Drive <b>${l.driveHrs} h</b></span><span>NWS office <b>${l.nws}</b></span>${l.snotel?`<span>SNOTEL <b>${esc(l.snotelName||l.snotel)}</b></span>`:''}${l.avgSnow?`<span>Avg season <b>${l.avgSnow} in</b></span>`:''}<span>Powder score <b>${D.powder.total}</b></span></div></div>
+      <button class="btn" id="btnClose">Close ✕</button></div>
+    <div class="stats" style="margin-top:0">
+      <div class="stat"><div class="label">Next 24 h</div><div class="value">${inch(D.d1)}<small> in</small></div></div>
+      <div class="stat"><div class="label">Next 72 h</div><div class="value">${inch(D.d3)}<small> in</small></div></div>
+      <div class="stat"><div class="label">7 day blended</div><div class="value">${inch(D.d7)}<small> in</small> ${sparkDays(D.days,56,22)}</div><div class="sub">models ${inch(D.mn)}–${inch(D.mx)} in</div></div>
+      <div class="stat"><div class="label">Agreement</div><div class="value"><span class="pill ${D.conf.cls}" style="font-size:16px">${D.conf.t}</span></div></div>
+      <div class="stat"><div class="label">Flow fit</div><div class="value"><span class="pill ${fitLabel(D.fit7,D.flow7).cls}" style="font-size:16px">${fitLabel(D.fit7,D.flow7).t}</span></div><div class="sub">${D.flow7?degToCompass(D.flow7.dir)+' '+f0(D.flow7.spd)+' mph at 700 mb':'—'}</div></div>
+    </div>
+    <h2>Why this number</h2>
+    <div class="why" id="why">${whyText(l,D)}</div>
+    <div class="twocol" style="margin-top:16px">
+      <div class="card"><h2>Daily snowfall by model</h2><div id="chDaily"></div><div class="legendRow" id="lgDaily"></div></div>
+      <div class="card"><h2>Cumulative snowfall</h2><div id="chCum"></div><div class="legendRow" id="lgCum"></div><div style="margin-top:8px"><button class="btn sm" id="btnEns">Load ensembles (ECMWF 51 + GEFS 31 members)</button> <span class="small muted" id="ensNote"></span></div><div id="ensStats"></div></div>
+    </div>
+    <div class="card" style="margin-top:16px"><h2>Storm anatomy, hour by hour</h2><p class="small muted" style="margin:0 0 8px">Bars: blended snowfall per hour. Arrows: 700 mb wind (direction it blows toward; longer = stronger), green when favorable for this mountain, red when shadowed. Orange line: 700 mb temperature. Blue band: 700 mb humidity ≥ 80 %. Bottom lane: 500 mb height, with the trough axis marked.</p><div id="chHourly"></div></div>
+    <div class="twocol" style="margin-top:16px">
+      <div class="card"><h2>Day by day reasoning</h2><div id="dayTable"></div></div>
+      <div class="card"><h2>Terrain and flow</h2><div id="rose"></div><p class="small" style="margin:8px 0 0">${esc(l.why||'')}</p><dl class="kv" style="margin-top:8px"><dt>Favored flow</dt><dd>${(l.favored||[]).join(', ')||'—'}</dd><dt>Shadowed on</dt><dd>${(l.shadowed||[]).join(', ')||'—'}</dd><dt>Upslope (east wind) helps</dt><dd>${l.upslope?'yes':'no'}</dd><dt>Lake effect</dt><dd>${l.lake?'yes (Great Salt Lake)':'no'}</dd><dt>Typical ratio</dt><dd>${l.slrTypical||'—'}:1</dd>${l.avalanche?`<dt>Avalanche center</dt><dd>${esc(l.avalanche)}</dd>`:''}</dl></div>
+    </div>
+    <div class="twocol" style="margin-top:16px">
+      <div class="card"><h2>NWS official forecast (${l.nws} gridpoint)</h2><div id="nwsGrid" class="small muted">Loading…</div></div>
+      <div class="card"><h2>SNOTEL ground truth</h2><div id="snotel" class="small muted">${l.snotel?'Loading…':'No SNOTEL assigned.'}</div></div>
+    </div>
+    <div class="card" style="margin-top:16px"><h2>Forecaster's discussion — NWS ${l.nws}</h2><p class="small muted" style="margin:0 0 8px">The Area Forecast Discussion is where the human forecaster explains the reasoning, model preferences and confidence. Mountain-relevant words are highlighted.</p><div id="afd" class="small muted">Loading…</div></div>
+    <div class="card" style="margin-top:16px"><h2>Every hour, every model</h2><details><summary>Open the full hourly table (${D.n-D.startIdx} hours)</summary><div id="nerd" style="overflow:auto;max-height:480px;margin-top:8px"></div></details></div>
+    <div class="card" style="margin-top:16px"><h2>Go deeper</h2><div id="links"></div></div>`;
+  $('#btnClose').onclick=closeDetail;
+  drawDaily(l,D); drawCum(l,D,null); drawHourly(l,D); drawDayTable(l,D); drawRose(l,D); drawLinks(l); drawNerd(l,D);
+  if(state.ens[l.id]){ drawCum(l,D,state.ens[l.id]); drawEnsStats(l,state.ens[l.id]); $('#btnEns').hidden=true; }
+  $('#btnEns').onclick=async()=>{ $('#btnEns').disabled=true; $('#ensNote').textContent='Loading ~80 ensemble members…'; const e=await fetchEnsemble(l); drawCum(l,D,e); drawEnsStats(l,e); $('#ensNote').textContent=''; };
+  fetchNwsGrid(l).then(g=>drawNws(l,g)); fetchSnotel(l).then(s=>drawSnotel(l,s)); fetchAFD(l.nws).then(a=>drawAfd(l,a));
+}
+function closeDetail(){ $('#drawer').classList.remove('open'); $('#scrim').classList.remove('on'); document.body.style.overflow=''; state.selected=null; $$('#ledger tr.row').forEach(tr=>tr.setAttribute('aria-selected','false')); }
+
+/* --- charts --- */
+function chartFrame(w,h,m){ return {w,h,m, iw:w-m.l-m.r, ih:h-m.t-m.b}; }
+function niceMax(v){ if(v<=0) return 1; const p=Math.pow(10,Math.floor(Math.log10(v))); const n=v/p; const s = n<=1?1:n<=2?2:n<=2.5?2.5:n<=5?5:10; return s*p; }
+function drawDaily(l,D){
+  const ids=MODELS.filter(m=>D.perModel[m.id]).map(m=>m.id); const days=D.days;
+  const F=chartFrame(560,230,{l:34,r:8,t:10,b:28}); const maxV=niceMax(Math.max(1,...days.flatMap(d=>ids.map(id=>d.byModel[id]||0)), ...days.map(d=>d.blend)));
+  const bw=F.iw/days.length; const gap=2; const n=ids.length; const barW=Math.min(14,(bw-16)/n);
+  const y=v=>F.m.t+F.ih-(v/maxV)*F.ih;
+  let s=`<svg viewBox="0 0 ${F.w} ${F.h}" width="100%" role="img" aria-label="Daily snowfall by model">`;
+  for(let k=0;k<=4;k++){ const v=maxV*k/4; s+=`<line x1="${F.m.l}" x2="${F.w-F.m.r}" y1="${y(v)}" y2="${y(v)}" stroke="var(--grid)"/><text x="${F.m.l-4}" y="${y(v)+4}" text-anchor="end" font-size="10" fill="var(--fg-3)">${v%1?v.toFixed(1):v}</text>`; }
+  days.forEach((d,i)=>{ const x0=F.m.l+i*bw+(bw-n*barW-(n-1)*gap)/2;
+    ids.forEach((id,k)=>{ const v=d.byModel[id]; if(v==null) return; const m=MODELS.find(x=>x.id===id); const x=x0+k*(barW+gap); const yy=y(v); const h=F.m.t+F.ih-yy;
+      s+=`<rect x="${x}" y="${yy}" width="${barW}" height="${Math.max(0,h)}" fill="${m.color}" rx="${h>4?3:0}" ry="${h>4?3:0}" data-tip="${esc(`<b>${inch(v)} in</b> ${m.name}<br>${d.label}`)}"></rect>`; });
+    s+=`<line x1="${F.m.l+i*bw+4}" x2="${F.m.l+(i+1)*bw-4}" y1="${y(d.blend)}" y2="${y(d.blend)}" stroke="var(--fg)" stroke-width="2" stroke-linecap="round"/>`;
+    s+=`<text x="${F.m.l+i*bw+bw/2}" y="${F.h-10}" text-anchor="middle" font-size="10" fill="var(--fg-2)">${d.label.split(',')[0]}</text>`;
+    s+=`<text x="${F.m.l+i*bw+bw/2}" y="${y(d.blend)-5}" text-anchor="middle" font-size="10" fill="var(--fg)" font-weight="600">${d.blend>=0.5?inch(d.blend):''}</text>`; });
+  s+='</svg>';
+  $('#chDaily').innerHTML=s; bindTips($('#chDaily'));
+  $('#lgDaily').innerHTML = ids.map(id=>{ const m=MODELS.find(x=>x.id===id); const p=D.perModel[id]; return `<span><span class="sw" style="background:${m.color}"></span>${m.short} <span class="mono muted">${p.full?inch(p.d7):inch(p.d3)+' (72h)'}</span></span>`; }).join('')+'<span><span class="ln" style="background:var(--fg)"></span>blend</span>';
+}
+function drawCum(l,D,E){
+  const ids=MODELS.filter(m=>D.perModel[m.id]).map(m=>m.id); const t=D.times, a=D.startIdx, n=D.n;
+  const series=ids.map(id=>{ const p=D.perModel[id]; let s=0; const pts=[]; for(let i=a;i<n;i++){ if(p.snow[i]==null){ if(i>a+2) break; else continue; } s+=p.snow[i]; pts.push([t[i],s]); } return {id, pts, m:MODELS.find(x=>x.id===id)}; });
+  let s0=0; const bl=[]; for(let i=a;i<n;i++){ s0+=D.blend[i]||0; bl.push([t[i],s0]); }
+  let maxV=Math.max(1,...series.map(x=>x.pts.length?x.pts[x.pts.length-1][1]:0), s0);
+  if(E){ Object.values(E).forEach(e=>{ if(e.bands) maxV=Math.max(maxV, e.p.p90); }); }
+  maxV=niceMax(maxV);
+  const F=chartFrame(560,230,{l:34,r:8,t:10,b:28}); const t0=t[a], t1=t[n-1];
+  const x=tt=>F.m.l+(tt-t0)/(t1-t0)*F.iw, y=v=>F.m.t+F.ih-(v/maxV)*F.ih;
+  let s=`<svg viewBox="0 0 ${F.w} ${F.h}" width="100%" role="img" aria-label="Cumulative snowfall">`;
+  for(let k=0;k<=4;k++){ const v=maxV*k/4; s+=`<line x1="${F.m.l}" x2="${F.w-F.m.r}" y1="${y(v)}" y2="${y(v)}" stroke="var(--grid)"/><text x="${F.m.l-4}" y="${y(v)+4}" text-anchor="end" font-size="10" fill="var(--fg-3)">${v%1?v.toFixed(1):v}</text>`; }
+  let lastD=null; for(let i=a;i<n;i++){ const d=dayIndex(t[i],state.offset); if(d!==lastD){ lastD=d; s+=`<line x1="${x(t[i])}" x2="${x(t[i])}" y1="${F.m.t}" y2="${F.m.t+F.ih}" stroke="var(--grid)"/><text x="${x(t[i])+3}" y="${F.h-10}" font-size="10" fill="var(--fg-2)">${fmtDay(t[i]).split(',')[0]}</text>`; } }
+  const lg=[];
+  if(E){ const cols={ecmwf_ifs025:'var(--s2)', gfs025:'var(--s1)'}; Object.entries(E).forEach(([id,e])=>{ if(!e.bands) return; const path=(lo,hi)=>{ const up=e.bands.map(b=>`${x(b.t)},${y(b[hi])}`), dn=e.bands.slice().reverse().map(b=>`${x(b.t)},${y(b[lo])}`); return `M${up.join('L')}L${dn.join('L')}Z`; };
+      s+=`<path d="${path('p10','p90')}" fill="${cols[id]}" fill-opacity=".10"/><path d="${path('p25','p75')}" fill="${cols[id]}" fill-opacity=".18"/>`; lg.push(`<span><span class="sw" style="background:${cols[id]};opacity:.35"></span>${e.name} 10–90 % / 25–75 %</span>`); }); }
+  series.forEach(se=>{ if(!se.pts.length) return; s+=`<path d="M${se.pts.map(p=>`${x(p[0])},${y(p[1])}`).join('L')}" fill="none" stroke="${se.m.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`; const e=se.pts[se.pts.length-1]; s+=`<circle cx="${x(e[0])}" cy="${y(e[1])}" r="4" fill="${se.m.color}" stroke="var(--panel)" stroke-width="2"/>`; });
+  s+=`<path d="M${bl.map(p=>`${x(p[0])},${y(p[1])}`).join('L')}" fill="none" stroke="var(--fg)" stroke-width="2.5"/>`;
+  s+=`<rect id="cumHit" x="${F.m.l}" y="${F.m.t}" width="${F.iw}" height="${F.ih}" fill="transparent"/><line id="cumX" x1="0" x2="0" y1="${F.m.t}" y2="${F.m.t+F.ih}" stroke="var(--fg-3)" stroke-width="1" style="display:none"/></svg>`;
+  $('#chCum').innerHTML=s;
+  const hit=$('#cumHit'), xl=$('#cumX');
+  hit.addEventListener('pointermove',e=>{ const r=hit.getBoundingClientRect(); const fr=(e.clientX-r.left)/r.width; const i=Math.max(a,Math.min(n-1,a+Math.round(fr*(n-1-a)))); const xx=x(t[i]); xl.setAttribute('x1',xx); xl.setAttribute('x2',xx); xl.style.display='';
+    const rows=series.map(se=>{ const p=se.pts.find(q=>q[0]===t[i]) || se.pts[se.pts.length-1]; return `<div><span class="k" style="background:${se.m.color}"></span><b>${inch(p?p[1]:null)}</b> ${se.m.short}</div>`; }).join('');
+    const b=bl[i-a]; let ens=''; if(E) Object.values(E).forEach(e=>{ if(!e.bands) return; const bb=e.bands.find(q=>q.t===t[i]); if(bb) ens+=`<div class="muted">${e.name.split(' ')[0]} median ${inch(bb.p50)} (${inch(bb.p10)}–${inch(bb.p90)})</div>`; });
+    showTip(`<div class="muted">${fmtDT(t[i])}</div><div><span class="k" style="background:var(--fg)"></span><b>${inch(b?b[1]:null)}</b> blend</div>${rows}${ens}`, e.clientX, e.clientY); });
+  hit.addEventListener('pointerleave',()=>{ xl.style.display='none'; hideTip(); });
+  $('#lgCum').innerHTML = '<span><span class="ln" style="background:var(--fg)"></span>blend</span>'+series.map(se=>`<span><span class="ln" style="background:${se.m.color}"></span>${se.m.short}</span>`).join('')+lg.join('');
+}
+function drawEnsStats(l,E){
+  const out=Object.values(E).map(e=>{ if(!e.bands) return `<div class="err">${esc(e.name)}: ${esc(e.err)}</div>`; return `<div style="margin-top:8px"><div class="eyebrow">${esc(e.name)} · 7-day totals</div>
+    <div class="kv"><dt>10th / 50th / 90th percentile</dt><dd class="mono"><b>${inch(e.p.p10)} / ${inch(e.p.p50)} / ${inch(e.p.p90)} in</b></dd><dt>Chance of ≥ 6 in</dt><dd class="mono">${Math.round(e.prob(6)*100)}%</dd><dt>Chance of ≥ 12 in</dt><dd class="mono">${Math.round(e.prob(12)*100)}%</dd><dt>Chance of ≥ 24 in</dt><dd class="mono">${Math.round(e.prob(24)*100)}%</dd></div></div>`; }).join('');
+  $('#ensStats').innerHTML = out + `<p class="small muted" style="margin:8px 0 0">Ensembles run the same model many times with slightly perturbed starting conditions. A wide 10–90 % band means the atmosphere is in a sensitive state and the point forecast above should not be trusted; a narrow band means confidence. The deterministic runs above are single members and routinely sit outside this band.</p>`;
+}
+function drawHourly(l,D){
+  const t=D.times, a=D.startIdx, n=D.n; const pres=D.pres;
+  const has500 = pres && pres.h.geopotential_height_500hPa;
+  const laneSnow=130, laneWind=44, laneT=60, lane500=has500?50:0;
+  const F=chartFrame(900, 14+laneSnow+laneWind+laneT+lane500+26, {l:40,r:44,t:14,b:26});
+  const maxV=niceMax(Math.max(0.5,...D.blend.slice(a)));
+  const xw=F.iw/(n-a); const x=i=>F.m.l+(i-a)*xw; const ySnow=v=>F.m.t+laneSnow-(v/maxV)*laneSnow;
+  let s=`<svg viewBox="0 0 ${F.w} ${F.h}" width="100%" role="img" aria-label="Hourly storm anatomy">`;
+  if(pres&&pres.h.relative_humidity_700hPa){ for(let i=a;i<n;i++){ const j=pres.map.get(t[i]); const rh=j==null?null:pres.h.relative_humidity_700hPa[j]; if(rh!=null&&rh>=80) s+=`<rect x="${x(i)}" y="${F.m.t}" width="${xw}" height="${F.ih}" fill="var(--s1)" fill-opacity=".07"/>`; } }
+  for(let k=0;k<=2;k++){ const v=maxV*k/2; s+=`<line x1="${F.m.l}" x2="${F.w-F.m.r}" y1="${ySnow(v)}" y2="${ySnow(v)}" stroke="var(--grid)"/><text x="${F.m.l-4}" y="${ySnow(v)+4}" text-anchor="end" font-size="10" fill="var(--fg-3)">${v}</text>`; }
+  s+=`<text x="${F.m.l-4}" y="${F.m.t-3}" text-anchor="end" font-size="9" fill="var(--fg-3)">in/hr</text>`;
+  let lastD=null; for(let i=a;i<n;i++){ const d=dayIndex(t[i],state.offset); if(d!==lastD){ lastD=d; s+=`<line x1="${x(i)}" x2="${x(i)}" y1="${F.m.t}" y2="${F.m.t+F.ih}" stroke="var(--axis)"/><text x="${x(i)+3}" y="${F.h-8}" font-size="10" fill="var(--fg-2)">${fmtDay(t[i]).split(',')[0]}</text>`; } }
+  for(let i=a;i<n;i++){ const v=D.blend[i]||0; if(v>0.005) s+=`<rect x="${x(i)+0.5}" y="${ySnow(v)}" width="${Math.max(1,xw-1)}" height="${F.m.t+laneSnow-ySnow(v)}" fill="var(--seq5)" rx="1"/>`; }
+  const yW=F.m.t+laneSnow+laneWind/2; s+=`<text x="${F.m.l-4}" y="${yW+3}" text-anchor="end" font-size="9" fill="var(--fg-3)">700 mb</text>`;
+  if(pres){ for(let i=a;i<n;i+=3){ const j=pres.map.get(t[i]); if(j==null) continue; const d=pres.h.wind_direction_700hPa[j], sp=pres.h.wind_speed_700hPa[j]; if(d==null) continue; const len=4+Math.min(16,sp/4); const fit=fitScore(l,d); const col = fit>=0.5?'var(--good)':fit<=-0.5?'var(--bad)':'var(--fg-2)';
+      s+=`<g transform="translate(${x(i)+xw*1.5},${yW}) rotate(${(d+180)%360})"><line x1="0" y1="${len/2}" x2="0" y2="${-len/2}" stroke="${col}" stroke-width="1.5"/><path d="M-3,${-len/2+4} L0,${-len/2} L3,${-len/2+4}" fill="none" stroke="${col}" stroke-width="1.5"/></g>`; }
+    const yT0=F.m.t+laneSnow+laneWind, temps=[]; for(let i=a;i<n;i++){ const j=pres.map.get(t[i]); temps.push(j==null?null:pres.h.temperature_700hPa[j]); }
+    const tv=temps.filter(v=>v!=null); if(tv.length){ const tmin=Math.floor(Math.min(...tv)/5)*5-5, tmax=Math.ceil(Math.max(...tv)/5)*5+5; const yT=v=>yT0+laneT-(v-tmin)/(tmax-tmin)*laneT;
+      [tmin,tmax].forEach(v=>{ s+=`<text x="${F.w-F.m.r+4}" y="${yT(v)+3}" font-size="9" fill="var(--fg-3)">${v}°F</text>`; });
+      const fz=yT(32); if(fz>yT0&&fz<yT0+laneT) s+=`<line x1="${F.m.l}" x2="${F.w-F.m.r}" y1="${fz}" y2="${fz}" stroke="var(--axis)"/><text x="${F.w-F.m.r+4}" y="${fz+3}" font-size="9" fill="var(--fg-3)">32°F</text>`;
+      const m10=yT(14); if(m10>yT0&&m10<yT0+laneT) s+=`<line x1="${F.m.l}" x2="${F.w-F.m.r}" y1="${m10}" y2="${m10}" stroke="var(--grid)"/><text x="${F.w-F.m.r+4}" y="${m10+3}" font-size="9" fill="var(--fg-3)">−10°C</text>`;
+      s+=`<path d="M${temps.map((v,k)=>v==null?null:`${x(a+k)+xw/2},${yT(v)}`).filter(Boolean).join('L')}" fill="none" stroke="var(--s2)" stroke-width="2"/>`; s+=`<text x="${F.m.l-4}" y="${yT0+laneT/2+3}" text-anchor="end" font-size="9" fill="var(--fg-3)">T 700</text>`; }
+    if(has500){ const y50=yT0+laneT; const hs=[]; for(let i=a;i<n;i++){ const j=pres.map.get(t[i]); hs.push(j==null?null:pres.h.geopotential_height_500hPa[j]); } const hv=hs.filter(v=>v!=null); if(hv.length){ const hmin=Math.min(...hv), hmax=Math.max(...hv); const yH=v=>y50+lane500-4-(v-hmin)/Math.max(1,hmax-hmin)*(lane500-8);
+      s+=`<line x1="${F.m.l}" x2="${F.w-F.m.r}" y1="${y50}" y2="${y50}" stroke="var(--grid)"/><path d="M${hs.map((v,k)=>v==null?null:`${x(a+k)+xw/2},${yH(v)}`).filter(Boolean).join('L')}" fill="none" stroke="var(--s7)" stroke-width="2"/><text x="${F.m.l-4}" y="${y50+lane500/2+3}" text-anchor="end" font-size="9" fill="var(--fg-3)">500 mb</text><text x="${F.w-F.m.r+4}" y="${yH(hmax)+3}" font-size="9" fill="var(--fg-3)">${f0(hmax)} m</text><text x="${F.w-F.m.r+4}" y="${yH(hmin)+3}" font-size="9" fill="var(--fg-3)">${f0(hmin)} m</text>`;
+      if(D.trough){ const k=t.indexOf(D.trough.t); if(k>=a){ s+=`<line x1="${x(k)+xw/2}" x2="${x(k)+xw/2}" y1="${F.m.t}" y2="${y50+lane500}" stroke="var(--s7)" stroke-dasharray="3 3"/><text x="${x(k)+xw/2+4}" y="${y50+10}" font-size="9" fill="var(--s7)" font-weight="600">trough axis</text>`; } } } }
+  }
+  s+=`<rect id="hrHit" x="${F.m.l}" y="${F.m.t}" width="${F.iw}" height="${F.ih}" fill="transparent"/></svg>`;
+  $('#chHourly').innerHTML=s;
+  const hit=$('#hrHit'); hit.addEventListener('pointermove',e=>{ const r=hit.getBoundingClientRect(); const i=Math.max(a,Math.min(n-1,a+Math.floor((e.clientX-r.left)/r.width*(n-a)))); let extra=''; if(pres){ const j=pres.map.get(t[i]); if(j!=null){ const h=pres.h; extra=`<div>700 mb: ${h.wind_direction_700hPa[j]!=null?degToCompass(h.wind_direction_700hPa[j]):'—'} ${f0(h.wind_speed_700hPa[j])} mph · ${f0(h.temperature_700hPa[j])}°F · RH ${f0(h.relative_humidity_700hPa?h.relative_humidity_700hPa[j]:null)}%</div><div>2 m: ${f0(h.temperature_2m[j])}°F${h.wind_gusts_10m?` · gusts ${f0(h.wind_gusts_10m[j])} mph`:''}${h.freezing_level_height?` · freezing level ${f0(mFt(h.freezing_level_height[j]))} ft`:''}${pres.slr[i]?` · ratio ${Math.round(pres.slr[i])}:1`:''}</div>${h.geopotential_height_500hPa?`<div>500 mb height ${f0(h.geopotential_height_500hPa[j])} m</div>`:''}`; } }
+    const per=MODELS.filter(m=>D.perModel[m.id]&&D.perModel[m.id].snow[i]!=null).map(m=>`<span><span class="k" style="background:${m.color}"></span>${m.short} ${D.perModel[m.id].snow[i].toFixed(2)}</span>`).join(' ');
+    showTip(`<div class="muted">${fmtDT(t[i])}</div><div><b>${(D.blend[i]||0).toFixed(2)} in/hr</b> blend</div><div class="small">${per}</div>${extra}`, e.clientX, e.clientY); });
+  hit.addEventListener('pointerleave',hideTip);
+}
+function drawDayTable(l,D){
+  $('#dayTable').innerHTML = `<div style="overflow-x:auto"><table class="cmpTable"><thead><tr><th>Day</th><th class="num">Snow</th><th class="num">Liquid</th><th>700 mb flow</th><th>Fit</th><th class="num">T 700</th><th class="num">RH</th><th class="num">Ratio</th><th class="num">Snow lvl</th><th class="num">Gust</th></tr></thead><tbody>`+
+    D.days.map(d=>{ const fl=fitLabel(d.fit,d.flow); return `<tr><td style="white-space:nowrap">${d.label}</td><td class="num mono"><b>${inch(d.blend)}</b></td><td class="num mono">${d.liq.toFixed(2)}</td><td style="white-space:nowrap">${d.flow?`${arrowSvg(d.flow.dir,'currentColor',12)} ${degToCompass(d.flow.dir)} ${f0(d.flow.spd)} mph`:'—'}</td><td><span class="pill ${fl.cls}">${fl.t}</span></td><td class="num mono">${d.t700!=null?f0(d.t700)+'°':'—'}</td><td class="num mono">${d.rh!=null?f0(d.rh)+'%':'—'}</td><td class="num mono">${d.slr?Math.round(d.slr)+':1':'—'}</td><td class="num mono">${d.fzl!=null?f0(mFt(d.fzl)-1000):'—'}</td><td class="num mono">${d.gust!=null?`<span class="${d.gust>=40?'pill low':''}">${f0(d.gust)}</span>`:'—'}</td></tr>`; }).join('')+'</tbody></table></div><p class="small muted" style="margin:6px 0 0">Flow, temperature and humidity are precipitation-weighted over each day, so they describe conditions while it is actually snowing. Gust is the day\'s peak.</p>';
+}
+function drawRose(l,D){
+  const R=70, cx=90, cy=90; let s=`<svg viewBox="0 0 180 180" width="180" height="180" role="img" aria-label="Favored wind directions">`;
+  s+=`<circle cx="${cx}" cy="${cy}" r="${R}" fill="var(--panel-2)" stroke="var(--line)"/>`;
+  const wedge=(name,col)=>{ const c=compassDeg(name); const a0=(c-22.5-90)*Math.PI/180, a1=(c+22.5-90)*Math.PI/180; return `<path d="M${cx},${cy}L${cx+R*Math.cos(a0)},${cy+R*Math.sin(a0)}A${R},${R},0,0,1,${cx+R*Math.cos(a1)},${cy+R*Math.sin(a1)}Z" fill="${col}" fill-opacity=".55"/>`; };
+  (l.favored||[]).forEach(n=>s+=wedge(n,'var(--good)')); (l.shadowed||[]).forEach(n=>s+=wedge(n,'var(--bad)'));
+  ['N','E','S','W'].forEach(n=>{ const c=compassDeg(n)*Math.PI/180; s+=`<text x="${cx+(R+9)*Math.sin(c)}" y="${cy-(R+9)*Math.cos(c)+4}" text-anchor="middle" font-size="11" fill="var(--fg-2)">${n}</text>`; });
+  D.days.forEach((d,i)=>{ if(!d.flow||d.blend<0.3) return; const c=d.flow.dir*Math.PI/180; const len=R*0.9-(i%3)*12; const x0=cx+len*Math.sin(c), y0=cy-len*Math.cos(c); s+=`<line x1="${x0}" y1="${y0}" x2="${cx}" y2="${cy}" stroke="var(--fg)" stroke-width="${1+Math.min(3,d.blend/4)}" stroke-opacity=".8"/><circle cx="${x0}" cy="${y0}" r="3" fill="var(--fg)"/><text x="${x0+(x0>cx?5:-5)}" y="${y0+4}" font-size="9" text-anchor="${x0>cx?'start':'end'}" fill="var(--fg-2)">${d.label.split(',')[0]}</text>`; });
+  s+='</svg>';
+  $('#rose').innerHTML = `<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">${s}<div class="small"><div><span style="display:inline-block;width:12px;height:12px;background:var(--good);opacity:.6;vertical-align:-2px"></span> favored upwind sectors</div><div><span style="display:inline-block;width:12px;height:12px;background:var(--bad);opacity:.6;vertical-align:-2px"></span> shadowed sectors</div><div>— lines: where the 700 mb wind comes <i>from</i> on each snow day (thicker = more snow)</div></div></div>`;
+}
+function drawNerd(l,D){
+  const t=D.times, a=D.startIdx, n=D.n; const ids=MODELS.filter(m=>D.perModel[m.id]).map(m=>m.id); const pres=D.pres;
+  let h=`<table class="nerd"><thead><tr><th>Hour (MT)</th><th>Blend</th>${ids.map(id=>`<th>${MODELS.find(m=>m.id===id).short}</th>`).join('')}<th>Liquid</th><th>2 m °F</th><th>700 °F</th><th>700 wind</th><th>RH 700</th><th>Gust</th><th>Ratio</th><th>Frz lvl ft</th></tr></thead><tbody>`;
+  let lastD=null; const maxB=Math.max(0.3,...D.blend.slice(a));
+  for(let i=a;i<n;i++){ const d=dayIndex(t[i],state.offset); const newDay=d!==lastD; lastD=d; const j=pres?pres.map.get(t[i]):null; const ph=pres?pres.h:null; const b=D.blend[i]||0;
+    h+=`<tr class="${newDay?'day':''}"><td>${newDay?fmtDay(t[i])+' ':''}${fmtHour(t[i])}</td><td class="${b>=maxB*0.5?'hot':''}">${b.toFixed(2)}</td>${ids.map(id=>{ const v=D.perModel[id].snow[i]; return `<td>${v==null?'·':v.toFixed(2)}</td>`; }).join('')}<td>${(D.blendLiq[i]||0).toFixed(2)}</td><td>${j!=null?f0(ph.temperature_2m[j]):'·'}</td><td>${j!=null&&ph.temperature_700hPa?f0(ph.temperature_700hPa[j]):'·'}</td><td>${j!=null&&ph.wind_direction_700hPa&&ph.wind_direction_700hPa[j]!=null?degToCompass(ph.wind_direction_700hPa[j])+' '+f0(ph.wind_speed_700hPa[j]):'·'}</td><td>${j!=null&&ph.relative_humidity_700hPa?f0(ph.relative_humidity_700hPa[j])+'%':'·'}</td><td>${j!=null&&ph.wind_gusts_10m?f0(ph.wind_gusts_10m[j]):'·'}</td><td>${pres&&pres.slr[i]?Math.round(pres.slr[i])+':1':'·'}</td><td>${j!=null&&ph.freezing_level_height?f0(mFt(ph.freezing_level_height[j])):'·'}</td></tr>`; }
+  h+='</tbody></table>';
+  $('#nerd').innerHTML=h;
+}
+function drawNws(l,g){
+  if(!g||!g.ok){ $('#nwsGrid').innerHTML=`<div class="err">Could not load api.weather.gov (${esc(g&&g.err)}). <a href="https://forecast.weather.gov/MapClick.php?lat=${l.lat}&lon=${l.lon}" target="_blank" rel="noopener">Open the NWS point forecast</a></div>`; return; }
+  const D=state.derived[l.id]; const diff=g.snow7-D.d7;
+  $('#nwsGrid').innerHTML=`<div class="kv"><dt>NWS 7-day snow</dt><dd><b class="mono">${inch(g.snow7)} in</b> <span class="muted">(72 h: ${inch(g.snow3)} in)</span></dd><dt>NWS 7-day liquid</dt><dd class="mono">${g.qpf7.toFixed(2)} in</dd><dt>Max precip chance</dt><dd class="mono">${f0(g.popMax)}%</dd><dt>Grid cell</dt><dd class="mono">${g.office} ${g.gridX},${g.gridY} · ${f0(mFt(g.elevM))} ft</dd><dt>vs. this blend</dt><dd>${Math.abs(diff)<1?'about the same':diff>0?`NWS is <b>${inch(diff)} in higher</b>`:`NWS is <b>${inch(-diff)} in lower</b>`}</dd></div>
+  <div style="margin-top:8px">${Object.entries(g.byDay).map(([d,v])=>`<span class="pill neutral" style="margin:2px">${d.split(',')[0]} ${inch(v)}</span>`).join('')}</div>
+  <p class="small muted" style="margin:8px 0 0">The NWS gridpoint is the forecaster-edited product (NBM first guess, then human adjustments on a 2.5 km grid). Its grid elevation can differ from the summit by thousands of feet, which explains many gaps. <a href="${esc(g.forecastUrl)}" target="_blank" rel="noopener">Text forecast</a> · <a href="https://forecast.weather.gov/MapClick.php?lat=${l.lat}&lon=${l.lon}" target="_blank" rel="noopener">NWS page</a></p>`;
+}
+function drawSnotel(l,s){
+  if(!s) return; if(!s.ok){ $('#snotel').innerHTML=`<div class="err">SNOTEL request failed (${esc(s.err)}). <a href="https://wcc.sc.egov.usda.gov/nwcc/site?sitenum=${l.snotel.split(':')[0]}" target="_blank" rel="noopener">Open station ${esc(l.snotelName||l.snotel)}</a></div>`; return; }
+  const sn=s.series.SNWD||[], sw=s.series.WTEQ||[], tb=s.series.TOBS||[];
+  const last=arr=>arr.length?arr[arr.length-1]:null; const d0=last(sn), w0=last(sw);
+  const chg = sn.length>1? (sn[sn.length-1].v - sn[0].v) : null;
+  const rows = sn.map(x=>`<tr><td>${x.date.slice(5)}</td><td class="num mono">${x.v==null?'—':x.v}</td><td class="num mono">${(sw.find(y=>y.date===x.date)||{}).v??'—'}</td><td class="num mono">${(tb.find(y=>y.date===x.date)||{}).v??'—'}</td></tr>`).join('');
+  $('#snotel').innerHTML=`<div class="small muted" style="margin-bottom:6px">Station <b>${esc(s.name||l.snotelName||l.snotel)}</b>${s.elev?` · ${f0(s.elev)} ft`:''} <span class="mono">${esc(l.snotel)}</span>${l.snotelVerified===false?' · <span class="pill med">ID from memory, check the name</span>':''}</div><div class="kv"><dt>Snow depth now</dt><dd><b class="mono">${d0&&d0.v!=null?d0.v+' in':'—'}</b> <span class="muted">${d0?d0.date:''}</span></dd><dt>Change, last ${Math.max(1,sn.length-1)} days</dt><dd class="mono">${chg==null?'—':(chg>=0?'+':'')+chg+' in'}</dd><dt>Snow water equivalent</dt><dd class="mono">${w0&&w0.v!=null?w0.v+' in':'—'}</dd></div>
+  <details style="margin-top:6px"><summary>Daily readings</summary><table class="cmpTable"><thead><tr><th>Date</th><th class="num">Depth in</th><th class="num">SWE in</th><th class="num">Temp °F</th></tr></thead><tbody>${rows}</tbody></table></details>
+  <p class="small muted" style="margin:8px 0 0">SNOTEL is the independent measurement the forecasts get verified against. Compare the depth change to what the models said for those days. <a href="https://wcc.sc.egov.usda.gov/nwcc/site?sitenum=${l.snotel.split(':')[0]}" target="_blank" rel="noopener">Station page</a></p>`;
+}
+function drawAfd(l,a){
+  if(!a||!a.ok){ $('#afd').innerHTML=`<div class="err">Could not load the discussion (${esc(a&&a.err)}). <a href="https://forecast.weather.gov/product.php?site=NWS&issuedby=${l.nws}&product=AFD&format=CI&version=1&glossary=0" target="_blank" rel="noopener">Read it on weather.gov</a></div>`; return; }
+  const kw=/(snow|upslope|orograph|northwest flow|southwest flow|westerly|ridge|trough|closed low|cut-?off|jet|moisture|ratios?|700 ?mb|500 ?mb|freezing level|snow level|ensemble|GFS|ECMWF|Euro|NAM|HRRR|NBM|mountain|Divide|Wasatch|Cottonwood|San Juan|Elk|Park Range|Front Range|Summit County|Vail|Steamboat|Alta|Snowbird|Uinta|lake[- ]effect|QPF|confidence)/gi;
+  const text=a.text.replace(/\r/g,''); const html=esc(text).replace(new RegExp(kw.source,'gi'), m=>`<mark>${m}</mark>`);
+  $('#afd').innerHTML=`<div class="small muted" style="margin-bottom:6px">Issued ${new Date(a.issued).toLocaleString('en-US',{timeZone:TZ})} · <a href="https://forecast.weather.gov/product.php?site=NWS&issuedby=${l.nws}&product=AFD&format=CI&version=1&glossary=0" target="_blank" rel="noopener">source</a></div><pre class="afd">${html}</pre>`;
+}
+function drawLinks(l){
+  const links=[
+    ['NWS point forecast', `https://forecast.weather.gov/MapClick.php?lat=${l.lat}&lon=${l.lon}`],
+    ['NWS hourly graph', `https://forecast.weather.gov/MapClick.php?lat=${l.lat}&lon=${l.lon}&FcstType=graphical`],
+    ['Open-Meteo model comparison', `https://open-meteo.com/en/docs?latitude=${l.lat}&longitude=${l.lon}&hourly=snowfall,temperature_2m&models=ecmwf_ifs025,gfs_global,icon_seamless,gem_seamless&timezone=America%2FDenver`],
+    ['Pivotal Weather 700 mb maps (free)', 'https://www.pivotalweather.com/model.php?m=gfs&p=700wh'],
+    ['Tropical Tidbits GFS/ECMWF/GEFS', 'https://www.tropicaltidbits.com/analysis/models/'],
+    ['WPC winter weather (WSSI, day 4–7)', 'https://www.wpc.ncep.noaa.gov/wwd/winter_wx.shtml'],
+    [l.state==='UT'?'Utah Avalanche Center':'Colorado Avalanche Information Center', l.state==='UT'?'https://utahavalanchecenter.org/forecasts':'https://avalanche.state.co.us/'],
+    ['OpenSnow daily snow', l.state==='UT'?'https://opensnow.com/dailysnow/utah':'https://opensnow.com/dailysnow/colorado'],
+  ];
+  if(l.state==='UT') links.push(['Wasatch Weather Weenies (Steenburgh)', 'https://wasatchweatherweenies.blogspot.com/']);
+  if(l.snotel) links.push(['SNOTEL station', `https://wcc.sc.egov.usda.gov/nwcc/site?sitenum=${l.snotel.split(':')[0]}`]);
+  $('#links').innerHTML = `<div class="chips">${links.map(([t,u])=>`<a class="chip" href="${esc(u)}" target="_blank" rel="noopener">${esc(t)} ↗</a>`).join('')}</div>`;
+}
+
+/* ---------- Compare ---------- */
+function renderCompareOptions(){
+  const opts=LOCATIONS.map(l=>`<option value="${l.id}">${esc(l.name)} (${l.state})</option>`).join('');
+  ['cmpA','cmpB','cmpC'].forEach((id,k)=>{ const sel=$('#'+id); const cur=sel.value; sel.innerHTML=(k===2?'<option value="">(none)</option>':'')+opts; if(cur) sel.value=cur; });
+  if(!$('#cmpA').value) $('#cmpA').value='steamboat'; if(!$('#cmpB').value||$('#cmpB').value===$('#cmpA').value) $('#cmpB').value='wolfcreek';
+  ['cmpA','cmpB','cmpC'].forEach(id=>$('#'+id).onchange=renderCompare);
+}
+function renderCompare(){
+  const ids=['cmpA','cmpB','cmpC'].map(id=>$('#'+id).value).filter(Boolean); const xs=ids.map(id=>({l:LOCATIONS.find(x=>x.id===id),D:state.derived[id]})).filter(x=>x.D);
+  if(xs.length<2){ $('#cmpOut').innerHTML='<p class="muted">Pick at least two locations.</p>'; return; }
+  const row=(label,fn,tip)=>`<tr><th title="${esc(tip||'')}">${label}</th>${xs.map(x=>`<td>${fn(x)}</td>`).join('')}</tr>`;
+  const best=(key)=>Math.max(...xs.map(x=>x.D[key]));
+  const hi=(v,b)=> v===b? 'style="font-weight:700;color:var(--accent-ink)"' : '';
+  $('#cmpOut').innerHTML=`<div style="overflow-x:auto"><table class="cmpTable" style="width:100%"><thead><tr><th></th>${xs.map(x=>`<th style="font-size:14px;text-transform:none;letter-spacing:0;color:var(--fg)">${esc(x.l.name)} <span class="muted">${x.l.state}</span></th>`).join('')}</tr></thead><tbody>
+    ${row('Region',x=>esc(x.l.region))}
+    ${row('Drive from Denver',x=>x.l.driveHrs+' h')}
+    ${row('Summit / base',x=>`${f0(x.l.summitFt)} / ${f0(x.l.baseFt)} ft`)}
+    ${row('Daily pattern',x=>sparkDays(x.D.days,120,28))}
+    ${row('Next 24 h',x=>`<span class="mono" ${hi(x.D.d1,best('d1'))}>${inch(x.D.d1)} in</span>`)}
+    ${row('Next 72 h',x=>`<span class="mono" ${hi(x.D.d3,best('d3'))}>${inch(x.D.d3)} in</span>`)}
+    ${row('7-day blend',x=>`<span class="mono" ${hi(x.D.d7,best('d7'))}>${inch(x.D.d7)} in</span>`)}
+    ${row('Model range',x=>`<span class="mono">${inch(x.D.mn)}–${inch(x.D.mx)} in</span>`)}
+    ${row('Agreement',x=>`<span class="pill ${x.D.conf.cls}">${x.D.conf.t}</span>`)}
+    ${row('Powder score',x=>`<span class="meter"><i><b style="width:${x.D.powder.total}%"></b></i><span class="mono">${x.D.powder.total}</span></span>`)}
+    ${row('Liquid (7 d)',x=>`<span class="mono">${x.D.liq7.toFixed(2)} in</span>`,'Total precipitation; the raw ingredient before ratios')}
+    ${row('Snow ratio',x=>`<span class="mono">${x.D.slr7?Math.round(x.D.slr7)+':1':'—'}</span>`)}
+    ${row('700 mb flow during snow',x=>x.D.flow7?`${arrowSvg(x.D.flow7.dir,'currentColor',12)} ${degToCompass(x.D.flow7.dir)} ${f0(x.D.flow7.spd)} mph`:'—')}
+    ${row('Favored / shadowed',x=>`${(x.l.favored||[]).join('/')||'—'} / ${(x.l.shadowed||[]).join('/')||'—'}`)}
+    ${row('Flow fit',x=>`<span class="pill ${fitLabel(x.D.fit7,x.D.flow7).cls}">${fitLabel(x.D.fit7,x.D.flow7).t}</span>`)}
+    ${row('700 mb temp',x=>x.D.t7000!=null?`${f0(x.D.t7000)}°F / ${f0(degC(x.D.t7000))}°C`:'—')}
+    ${row('700 mb humidity',x=>x.D.rh7!=null?f0(x.D.rh7)+'%':'—')}
+    ${row('Snow level vs base',x=>x.D.fzl7!=null?`${f0(mFt(x.D.fzl7)-1000)} ft ${mFt(x.D.fzl7)-1000>x.l.baseFt?'<span class="pill low">above base</span>':'<span class="pill high">below base</span>'}`:'—')}
+    ${row('Peak gust (7 d)',x=>x.D.gust7!=null?f0(x.D.gust7)+' mph':'—')}
+    ${row('Trough axis passes',x=>x.D.trough?fmtDT(x.D.trough.t):'—')}
+    ${row('Wettest / driest model',x=>x.D.wet?`${MODELS.find(m=>m.id===x.D.wet).short} ${inch(x.D.perModel[x.D.wet].d7)} / ${MODELS.find(m=>m.id===x.D.dry).short} ${inch(x.D.perModel[x.D.dry].d7)}`:'—')}
+    ${row('Avg season snowfall',x=>x.l.avgSnow?x.l.avgSnow+' in':'—')}
+  </tbody></table></div>
+  <div class="why" style="margin-top:12px">${compareNarrative(xs)}</div>`;
+}
+function compareNarrative(xs){
+  const s=[...xs].sort((a,b)=>b.D.d7-a.D.d7); const A=s[0], B=s[s.length-1]; if(A.D.d7-B.D.d7<1) return `<p>${esc(A.l.name)} and ${esc(B.l.name)} are within an inch of each other this week; the difference is inside the model noise.</p>`;
+  const reasons=[];
+  if(A.D.liq7-B.D.liq7>0.15) reasons.push(`more liquid falls there (${A.D.liq7.toFixed(2)} vs ${B.D.liq7.toFixed(2)} in), which is the direct result of the storm track and orographic lift`);
+  if(A.D.fit7!=null&&B.D.fit7!=null&&A.D.fit7-B.D.fit7>0.4) reasons.push(`the ${A.D.flow7?degToCompass(A.D.flow7.dir):''} flow is ${fitLabel(A.D.fit7,A.D.flow7).t} for ${esc(A.l.name)} but ${fitLabel(B.D.fit7,B.D.flow7).t} for ${esc(B.l.name)}`);
+  if(A.D.slr7&&B.D.slr7&&A.D.slr7-B.D.slr7>2) reasons.push(`colder air gives it fluffier snow (${Math.round(A.D.slr7)}:1 vs ${Math.round(B.D.slr7)}:1), so the same water makes more inches`);
+  if(A.D.rh7&&B.D.rh7&&A.D.rh7-B.D.rh7>10) reasons.push(`the mountain layer is more saturated (${f0(A.D.rh7)}% vs ${f0(B.D.rh7)}% at 700 mb)`);
+  if(B.D.fzl7&&mFt(B.D.fzl7)-1000>B.l.baseFt) reasons.push(`${esc(B.l.name)} also loses some to rain or mix at the base (snow level ≈ ${f0(mFt(B.D.fzl7)-1000)} ft)`);
+  return `<p><b>${esc(A.l.name)} beats ${esc(B.l.name)} by ${inch(A.D.d7-B.D.d7)} in</b> in the blend${reasons.length?' because '+reasons.join('; '):''}.</p><p class="small muted">Confidence: ${A.l.name} ${A.D.conf.t}, ${B.l.name} ${B.D.conf.t}. ${A.D.conf.cls==='low'||B.D.conf.cls==='low'?'At least one side has low model agreement, so this ranking could flip with the next runs.':''}</p>`;
+}
+/* ===================== Sources & methods tab ===================== */
+function renderSources(){
+  $('#sources').innerHTML = `
+  <h2>How to read this dashboard</h2>
+  <p>Every number here is computed in your browser from raw model output, so you can see the ingredients instead of a resort's marketing number. The pipeline for each mountain:</p>
+  <ol>
+    <li><b>Liquid first.</b> Each model's hourly precipitation and snowfall are pulled for the mountain's coordinates, with the model's temperature profile downscaled to the upper-mountain elevation.</li>
+    <li><b>Then the ratio.</b> Open-Meteo reports snowfall at a flat 7:1 ratio (7 cm of snow per 10 mm of water), which is far too dense for Colorado and Utah. The default here re-derives snow depth with a Kuchera-style ratio from the warmest temperature in the low-to-mid column (2 m, 850 mb, 700 mb), capped at 5–20:1, with a wind penalty above 25 mph. Switch the <i>Snow ratio</i> control to see the raw 7:1 number or a flat regional typical ratio.</li>
+    <li><b>Then the blend.</b> The headline is the mean (or median) of the global models that cover the full 7 days; HRRR and other short-range models show in the charts but do not drive the 7-day total.</li>
+    <li><b>Then the why.</b> During the hours each model has precipitation, the dashboard averages the 700 mb wind, temperature and humidity (precipitation-weighted) and compares the wind direction to the mountain's historically favored and shadowed sectors.</li>
+  </ol>
+  <h3>The columns, and what each one is telling you</h3>
+  <table class="srcTable"><thead><tr><th>Column</th><th>What it is</th><th>How to use it</th></tr></thead><tbody>
+    <tr><td>24 h / 72 h / 7 day</td><td>Blended snowfall from now, in inches</td><td>Day 1–2 is usually solid; day 4–7 is a trend, not a total.</td></tr>
+    <tr><td>Model range</td><td>Lowest and highest 7-day total among the global models</td><td>A 6–18 in range means "a storm is likely, size unknown." Plan on the low end for travel, hope for the high end.</td></tr>
+    <tr><td>Agreement</td><td>Range divided by the blended total: high &lt; 50 %, medium &lt; 100 %, low above</td><td>Low agreement plus a big number is the classic "wait for the next run" case. Open the ensemble in the detail view.</td></tr>
+    <tr><td>Flow fit</td><td>700 mb wind direction during snow vs. the mountain's favored / shadowed sectors</td><td>Favorable means the models are probably <i>under</i>-forecasting (coarse grids smear terrain). Shadowed means be suspicious of a big number.</td></tr>
+    <tr><td>Ratio</td><td>Estimated snow-to-liquid ratio while it is snowing</td><td>15:1 and up is blower powder; under 10:1 is heavy, wet, base-building snow.</td></tr>
+    <tr><td>Snow level</td><td>Freezing level minus about 1,000 ft, during precipitation</td><td>If it sits above the base, the lower mountain gets rain or mix and the "total" only applies up high.</td></tr>
+    <tr><td>Powder score</td><td>0–100 for the next 72 h: snow amount (45), ratio (20), wind (15), model agreement (12), flow fit (8)</td><td>A ranking of where the skiing is most likely to be good, not just where the most inches fall. Hover the meter for the breakdown.</td></tr>
+    <tr><td>Gusts</td><td>Peak 10 m wind gust in the next 7 days</td><td>Above ~40 mph expect lift holds and wind-scoured ridges; the best snow will be in sheltered trees.</td></tr>
+    <tr><td>Trough axis</td><td>Time the 500 mb height bottoms out</td><td>Snow is heaviest in the moist SW flow just ahead of it and turns to colder NW-flow snow behind it. It is the "storm track" in one number.</td></tr>
+  </tbody></table>
+
+  <h3>Why one mountain beats another: the physics in four lines</h3>
+  <ul>
+    <li><b>Direction.</b> Air forced up a slope cools and drops its moisture on the windward side, then dries on the lee side. At 700 mb (about 10,000 ft) the wind direction tells you which slopes are windward. NW flow loads Steamboat, the I-70 corridor and the Cottonwoods; SW flow loads Wolf Creek, the San Juans, Taos and the Wasatch Back / southern Utah; easterly upslope behind a Front Range low loads Eldora, Winter Park, Loveland and the foothills while the I-70 resorts west of the Divide sit under sun.</li>
+    <li><b>Moisture.</b> 700 mb relative humidity near saturation (80 %+) and a deep moist layer make orographic lift efficient; dry mid-levels produce showery, hit-or-miss snow even with a good direction.</li>
+    <li><b>Temperature.</b> Snow crystals grow fastest between −12 and −18 °C (the dendritic growth zone). When that layer sits in the cloud with saturation and lift, ratios run 15–25:1. Warm storms with 700 mb temps near −5 °C give 8–10:1 "cement".</li>
+    <li><b>Track.</b> A closed low cut off over the Four Corners / Albuquerque means multi-day SW/NE flow: southern Colorado and the Front Range win, I-70 often dries out. A fast Pacific trough swings flow from SW to NW in a day: the San Juans get the front end, Steamboat and Vail get the back end. Split flow and cutoffs are where models disagree most.</li>
+  </ul>
+
+  <h2>Model guide (as of October 2026)</h2>
+  <table class="srcTable"><thead><tr><th>Model</th><th>Resolution / range</th><th>Reputation for CO–UT snow</th></tr></thead><tbody>
+    <tr><td>ECMWF IFS (Cycle 50r1, May 2026)</td><td>~9 km, 10 days; 51-member ENS</td><td>Best medium-range skill overall. Wet bias at valley elevations, slight dry bias on high terrain in the West (Caron &amp; Steenburgh 2020). Open data is served at 0.25°.</td></tr>
+    <tr><td>NOAA GFS v16</td><td>13 km, 16 days; GEFS 31 members at ~25 km</td><td>Runs 4×/day, so it reacts fastest. Tends to be the wet outlier and flip-flops at day 4+. At Alta it averages 33 % dry on liquid vs. SNOTEL.</td></tr>
+    <tr><td>DWD ICON</td><td>13 km, 7.5 days</td><td>Independent third opinion; useful tie-breaker when GFS and ECMWF split.</td></tr>
+    <tr><td>Canadian GEM / GDPS</td><td>15 km, 10 days</td><td>Fourth opinion; NAEFS (GEFS + Canadian ensemble) plumes are a favorite Utah tool.</td></tr>
+    <tr><td>NOAA HRRR</td><td>3 km, 18 h hourly / 48 h at synoptic runs</td><td>Best terrain detail for tonight and tomorrow; underestimates Colorado cold-season precipitation by 25–65 % vs SNOTEL, ~29 % dry at Alta.</td></tr>
+    <tr><td>NOAA NBM v5.0 (Apr 2026)</td><td>2.5 km blend, 11 days</td><td>Weighted blend of ~100 inputs with calibrated snow probabilities and its own ratio / snow-level fields; the first guess for every NWS point forecast.</td></tr>
+    <tr><td>ECMWF AIFS</td><td>0.25°, 15 days, machine learning</td><td>Excellent large-scale pattern skill, but smoothed: it cannot resolve orographic extremes, so treat its totals as a floor.</td></tr>
+    <tr><td>RRFS / REFS</td><td>3 km, 84 h; 5-member ensemble + HRRR</td><td>NOAA's replacement for NAM / HREF; switchover scheduled Oct 14, 2026. Not yet in Open-Meteo.</td></tr>
+  </tbody></table>
+
+  <h2>Where the data comes from</h2>
+  <table class="srcTable"><thead><tr><th>Source</th><th>Used for</th><th>Notes</th></tr></thead><tbody>
+    <tr><td><a href="https://open-meteo.com/en/docs" target="_blank" rel="noopener">Open-Meteo forecast API</a></td><td>All hourly model fields</td><td>Free, no key, CORS, 10,000 calls/day. Each refresh here makes one request per model for all ${LOCATIONS.length} locations. Attribution: CC BY 4.0.</td></tr>
+    <tr><td><a href="https://open-meteo.com/en/docs/ensemble-api" target="_blank" rel="noopener">Open-Meteo ensemble API</a></td><td>ECMWF ENS and GEFS member plumes</td><td>Loaded on demand per location (about 80 members).</td></tr>
+    <tr><td><a href="https://www.weather.gov/documentation/services-web-api" target="_blank" rel="noopener">api.weather.gov</a></td><td>Gridpoint snowfall / QPF and Area Forecast Discussions</td><td>Free, CORS. The AFD is the single best free "why" document: the human forecaster's reasoning, model preferences and confidence, updated at least twice a day.</td></tr>
+    <tr><td><a href="https://wcc.sc.egov.usda.gov/awdbRestApi/swagger-ui/index.html" target="_blank" rel="noopener">USDA NRCS AWDB (SNOTEL)</a></td><td>Measured snow depth, SWE and temperature</td><td>Ground truth for verification. If a request fails in your browser, the station link still opens the official page.</td></tr>
+  </tbody></table>
+
+  <h2>Expert sources worth reading alongside this (ranked)</h2>
+  <ol>
+    <li><b>NWS Area Forecast Discussions</b> — <a href="https://forecast.weather.gov/product.php?site=NWS&issuedby=BOU&product=AFD&format=CI&version=1&glossary=0" target="_blank" rel="noopener">Boulder</a> · <a href="https://forecast.weather.gov/product.php?site=NWS&issuedby=GJT&product=AFD&format=CI&version=1&glossary=0" target="_blank" rel="noopener">Grand Junction</a> · <a href="https://forecast.weather.gov/product.php?site=NWS&issuedby=PUB&product=AFD&format=CI&version=1&glossary=0" target="_blank" rel="noopener">Pueblo</a> · <a href="https://forecast.weather.gov/product.php?site=NWS&issuedby=SLC&product=AFD&format=CI&version=1&glossary=0" target="_blank" rel="noopener">Salt Lake City</a>. Free, 2+ per day, written to explain reasoning and alternate scenarios. Shown inside each location's detail here.</li>
+    <li><b>OpenSnow</b> — <a href="https://opensnow.com/dailysnow/colorado" target="_blank" rel="noopener">Colorado Daily Snow</a> (Joel Gratz) and <a href="https://opensnow.com/dailysnow/utah" target="_blank" rel="noopener">Utah Daily Snow</a> (Evan Thayer). Narrative is free; Base ($49.99/yr) and Premium ($99.99/yr) tiers add the 3 km "PEAKS" downscaled model, 15-day and precipitation-type tools. Best plain-English storm-track confidence statements.</li>
+    <li><b><a href="https://wasatchweatherweenies.blogspot.com/" target="_blank" rel="noopener">Wasatch Weather Weenies</a></b> — Jim Steenburgh (University of Utah), free. The scientific reference for Cottonwood snow, lake effect and ratios.</li>
+    <li><b><a href="https://avalanche.state.co.us/" target="_blank" rel="noopener">CAIC weather</a></b> — twice-daily mountain weather for 21 Colorado sites plus an in-house 2 km WRF run 4×/day; <b><a href="https://utahavalanchecenter.org/forecasts" target="_blank" rel="noopener">Utah Avalanche Center</a></b> and the <a href="https://www.weather.gov/slc/mtnwx" target="_blank" rel="noopener">NWS SLC mountain weather page</a> for Utah.</li>
+    <li><b><a href="https://www.wpc.ncep.noaa.gov/wwd/winter_wx.shtml" target="_blank" rel="noopener">WPC winter weather</a></b> — probabilistic snowfall (chance of 4 / 8 / 12 in), the Winter Storm Severity Index (WSSI and the 7-day WSSI-P), day 4–7 outlooks and Key Messages.</li>
+    <li><b>Model graphics</b> — <a href="https://www.pivotalweather.com/" target="_blank" rel="noopener">Pivotal Weather</a> (700 mb maps, Kuchera snow, NBM), <a href="https://www.tropicaltidbits.com/analysis/models/" target="_blank" rel="noopener">Tropical Tidbits</a> (ensemble plumes, 500 mb heights for storm track), <a href="https://charts.ecmwf.int/" target="_blank" rel="noopener">ECMWF Open Charts</a> (free snowfall anomaly and extreme forecast index), <a href="https://www.windy.com/" target="_blank" rel="noopener">Windy</a> (quick multi-model point comparison), <a href="https://mag.ncep.noaa.gov/" target="_blank" rel="noopener">NOAA MAG</a> (NBM snow maps). WeatherBELL ($29.99/mo) adds 0.1° hourly ECMWF.</li>
+    <li><b>Colorado independents</b> — <a href="https://www.bouldercast.com/" target="_blank" rel="noopener">BoulderCAST</a> (free weekly outlook, paid daily and SummitCAST), Chris Tomer (free, syndicated via Unofficial Networks and SnowBrains), <a href="https://powderchasers.com/" target="_blank" rel="noopener">Powderchasers</a> (free posts; paid chase concierge).</li>
+    <li><b>Verification</b> — <a href="https://bestsnow.net/" target="_blank" rel="noopener">bestsnow.net</a> (Tony Crocker's independent snowfall records; resort claims run 10–40 % high at several areas) and SNOTEL.</li>
+  </ol>
+
+  <h2>Caveats you should know</h2>
+  <ul>
+    <li>Global models at 9–25 km put a mountain like Alta or Wolf Creek on a grid cell that averages thousands of feet of terrain. Expect them to under-forecast windward peaks and over-forecast valleys; this is why the flow-fit column exists.</li>
+    <li>The Kuchera ratio is an estimate from temperature alone. NWS Utah uses an Alcott–Steenburgh regression (650 mb temperature and wind) and the NBM uses a Cobb-style method; all of them carry 4–8 ratio points of error on any given day.</li>
+    <li>Favored / shadowed sectors are a mix of published studies (Steamboat, Cottonwoods, Wolf Creek, Front Range upslope) and forecaster consensus. They are written into the page and easy to edit.</li>
+    <li>SNOTEL station IDs marked "from memory" were not verified against the USDA station list; the station name returned by the API is shown so you can catch a mismatch.</li>
+    <li>Free Open-Meteo use is limited to roughly 10,000 requests a day per IP; this page caches each refresh for 30 minutes.</li>
+  </ul>`;
+}
+
+/* ===================== Boot ===================== */
+function applyTheme(){ const t=state.prefs.theme; if(t) document.documentElement.setAttribute('data-theme',t); else document.documentElement.removeAttribute('data-theme'); }
+function renderAll(){ renderHero(); renderStats(); renderLedger(); renderMapDays(); renderMap(); renderPattern(); renderStrips(); renderCompare(); }
+function renderRegionChips(){ const regs=[...new Set(LOCATIONS.map(l=>l.region))]; $('#regionChips').innerHTML=regs.map(r=>`<button class="chip" aria-pressed="${state.regions.has(r)}" data-r="${esc(r)}">${esc(r)}</button>`).join(''); $$('#regionChips .chip').forEach(c=>c.onclick=()=>{ const r=c.dataset.r; if(state.regions.has(r)) state.regions.delete(r); else state.regions.add(r); renderRegionChips(); renderAll(); }); }
+function showNotices(){
+  const bad=MODELS.filter(m=>state.models[m.id]&&!state.models[m.id].ok&&!m.optional); const opt=MODELS.filter(m=>m.optional&&state.models[m.id]&&!state.models[m.id].ok);
+  const notes=MODELS.filter(m=>state.models[m.id]&&state.models[m.id].ok&&state.models[m.id].note).map(m=>`${m.short}: ${state.models[m.id].note}`);
+  let html='';
+  const okAny=MODELS.some(m=>state.models[m.id]&&state.models[m.id].ok);
+  if(!okAny && location.protocol!=='file:'){ $('#notices').innerHTML='<div class="notice small">No data snapshot has been published to this page yet, and hosted pages cannot call the weather services directly. The downloadable file version fetches live model runs.</div>'; return; }
+  if(bad.length) html+=`<div class="err">Could not load ${bad.map(m=>m.name).join(', ')} (${bad.map(m=>esc(state.models[m.id].err)).join('; ')}). If every model fails, the page is probably blocked from reaching api.open-meteo.com: open this file directly in a normal browser tab.</div>`;
+  if(opt.length) html+=`<div class="notice">Optional models not available right now: ${opt.map(m=>m.short).join(', ')}. The blend uses the ${MODELS.filter(m=>state.models[m.id]&&state.models[m.id].ok&&m.days>=7).length} full-range models that loaded.</div>`;
+  if(notes.length) html+=`<div class="notice small">${notes.map(esc).join(' · ')}</div>`;
+  $('#notices').innerHTML=html;
+}
+async function loadSnapshot(){ if(location.protocol==='file:') return null; try{ const r=await fetch('data/snapshot.json',{cache:'no-store'}); if(!r.ok) return null; const j=await r.json(); return (j && j.models)? j : null; }catch(e){ return null; } }
+function applySnapshot(snap){
+  state.snapshot=snap;
+  for(const m of MODELS){ const d=snap.models[m.id]; if(d&&d.data) d.data.forEach(x=>{ x.h=normaliseUnits(x.h, x.units); }); state.models[m.id]= d? Object.assign({fetchedAt:snap.fetchedAt, fromSnapshot:true}, d) : {ok:false, err:'not in snapshot'}; }
+  Object.assign(state.afd, snap.afd||{}); Object.assign(state.nwsGrid, snap.nwsGrid||{}); Object.assign(state.snotel, snap.snotel||{});
+  if(snap.ens){ for(const id in snap.ens){ const e=snap.ens[id]; for(const k in e){ if(e[k].finals){ const f=e[k].finals; e[k].prob = th=>f.filter(v=>v>=th).length/f.length; } } } Object.assign(state.ens, snap.ens); }
+}
+async function loadAll(force){
+  setStatus('busy','Fetching model runs…'); state.now=Math.floor(Date.now()/1000); setLoad(0.05);
+  if(!force){ const snap=await loadSnapshot(); if(snap){ applySnapshot(snap); try{ computeAll(); renderAll(); }catch(e){ console.error(e); } showNotices(); setLoad(1);
+      const age=Math.round((Date.now()-snap.fetchedAt)/60000); const ok=MODELS.filter(m=>state.models[m.id]&&state.models[m.id].ok).length;
+      setStatus(age<8*60?'ok':'warn', `${ok} models · snapshot from ${new Date(snap.fetchedAt).toLocaleString('en-US',{timeZone:TZ,weekday:'short',hour:'numeric',minute:'2-digit'})} MT (${age<60?age+' min':Math.round(age/60)+' h'} old)`);
+      $('#notices').insertAdjacentHTML('afterbegin', `<div class="notice small">This hosted copy shows a data snapshot that is refreshed on a schedule. The downloadable file version pulls fresh model runs every time it opens.</div>`);
+      return; } }
+  let done=0; await Promise.all(MODELS.map(async m=>{ await fetchModel(m, force); done++; setLoad(0.05+0.85*done/MODELS.length); if(state.models['ecmwf_ifs025']&&state.models['ecmwf_ifs025'].ok&&done>=2){ try{ computeAll(); renderAll(); }catch(e){ console.error(e); } } }));
+  try{ computeAll(); renderAll(); }catch(e){ console.error(e); setStatus('bad','Render error: '+e.message); }
+  showNotices(); setLoad(1);
+  const ok=MODELS.filter(m=>state.models[m.id]&&state.models[m.id].ok);
+  if(!ok.length){ setStatus('bad','No model data loaded'); if(state.snapshot){ applySnapshot(state.snapshot); try{ computeAll(); renderAll(); }catch(e){} $('#notices').insertAdjacentHTML('afterbegin','<div class="err">This hosted page cannot call the weather APIs directly (browser security policy), so the snapshot stays in place. Open the downloaded file to fetch live runs.</div>'); } } else { const cached=ok.every(m=>state.models[m.id].fromCache); setStatus(ok.length>=4?'ok':'warn', `${ok.length} models loaded${cached?' (cached)':''} · ${new Date().toLocaleTimeString('en-US',{timeZone:TZ,hour:'numeric',minute:'2-digit'})} MT`); }
+}
+function init(){
+  applyTheme();
+  $('#slrMode').value=state.prefs.slrMode; $('#blendMode').value=state.prefs.blendMode; $('#drive').value=state.prefs.drive; $('#driveLbl').textContent= state.prefs.drive>=10?'any':state.prefs.drive+' h';
+  $('#q').oninput=e=>{ state.q=e.target.value; renderHero(); renderStats(); renderLedger(); renderMap(); renderPattern(); renderStrips(); };
+  $('#drive').oninput=e=>{ state.prefs.drive=+e.target.value; $('#driveLbl').textContent= state.prefs.drive>=10?'any':state.prefs.drive+' h'; savePrefs(); renderAll(); };
+  $('#slrMode').onchange=e=>{ state.prefs.slrMode=e.target.value; savePrefs(); state.ens={}; computeAll(); renderAll(); if(state.selected) openDetail(state.selected); };
+  $('#blendMode').onchange=e=>{ state.prefs.blendMode=e.target.value; savePrefs(); computeAll(); renderAll(); if(state.selected) openDetail(state.selected); };
+  $('#btnRefresh').onclick=()=>loadAll(true);
+  $('#btnTheme').onclick=()=>{ const cur=document.documentElement.getAttribute('data-theme'); const sysDark=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches; const isDark= cur? cur==='dark' : sysDark; state.prefs.theme= isDark?'light':'dark'; savePrefs(); applyTheme(); };
+  $$('nav.tabs button').forEach(b=>b.onclick=()=>{ $$('nav.tabs button').forEach(x=>x.setAttribute('aria-selected', x===b)); $$('[role=tabpanel]').forEach(p=>p.hidden = p.id!=='tab-'+b.dataset.tab); $('#filters').hidden = b.dataset.tab==='sources'; });
+  $('#scrim').onclick=closeDetail; document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeDetail(); });
+  renderRegionChips(); renderSources(); renderCompareOptions();
+  $('#ledger thead').innerHTML='<tr>'+COLS.map(c=>`<th>${c.t}</th>`).join('')+'</tr>';
+  loadAll(false);
+}
+/* ---------- Hero art: generated ridgelines and drifting snow ---------- */
+function heroArt(){
+  const c=$('#heroArt'); if(!c) return; const ctx=c.getContext('2d'); const reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let W=0,H=0,dpr=1,flakes=[],raf=null,last=0;
+  const ridge=(seed, base, amp)=>{ const pts=[]; for(let x=0;x<=W+8;x+=6){ const u=x/W; let y=0; for(let k=1;k<=6;k++){ y+=Math.sin(u*Math.PI*2*k*0.9+seed*k*1.7+k*0.6)*amp/(k*0.9); } y+=Math.sin(u*55+seed*3)*amp*0.06; pts.push([x, base+y]); } return pts; };
+  function size(){ const r=c.parentElement.getBoundingClientRect(); dpr=Math.min(2,window.devicePixelRatio||1); W=c.width=Math.max(10,Math.round(r.width*dpr)); H=c.height=Math.max(10,Math.round(r.height*dpr)); flakes=Array.from({length:Math.round(W/dpr/14)},()=>({x:Math.random()*W,y:Math.random()*H,r:(0.6+Math.random()*1.6)*dpr,v:(0.15+Math.random()*0.35)*dpr,w:Math.random()*Math.PI*2})); draw(0); }
+  function draw(dt){ ctx.clearRect(0,0,W,H);
+    // sun glow top-right
+    const g=ctx.createRadialGradient(W*0.86,H*0.1,0,W*0.86,H*0.1,W*0.35); g.addColorStop(0,'rgba(255,255,255,0.16)'); g.addColorStop(1,'rgba(255,255,255,0)'); ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+    const layers=[{b:0.58,a:0.09,f:0.10,s:0.30},{b:0.70,a:0.13,f:0.16,s:0.42},{b:0.82,a:0.17,f:0.24,s:0.55},{b:0.95,a:0.22,f:0.34,s:0.7}];
+    layers.forEach((L,i)=>{ const pts=ridge(i*2.3+1.1, H*L.b, H*L.a); ctx.beginPath(); ctx.moveTo(0,H); pts.forEach(p=>ctx.lineTo(p[0],p[1])); ctx.lineTo(W,H); ctx.closePath(); ctx.fillStyle=`rgba(4,12,28,${L.f})`; ctx.fill(); ctx.beginPath(); pts.forEach((p,k)=>k?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1])); ctx.strokeStyle=`rgba(230,240,255,${L.s})`; ctx.lineWidth=1.1*dpr; ctx.stroke();
+      // snow caps: lighter fill above a snow line on each ridge
+      ctx.save(); ctx.beginPath(); ctx.moveTo(0,H); pts.forEach(p=>ctx.lineTo(p[0],p[1])); ctx.lineTo(W,H); ctx.closePath(); ctx.clip(); const snowLine=H*(L.b-L.a*0.35); const sg=ctx.createLinearGradient(0,snowLine-H*0.12,0,snowLine); sg.addColorStop(0,'rgba(255,255,255,0.22)'); sg.addColorStop(1,'rgba(255,255,255,0)'); ctx.fillStyle=sg; ctx.fillRect(0,0,W,snowLine); ctx.restore(); });
+    // flakes
+    ctx.fillStyle='rgba(255,255,255,0.85)'; flakes.forEach(f=>{ ctx.beginPath(); ctx.arc(f.x,f.y,f.r,0,Math.PI*2); ctx.fill(); if(dt){ f.y+=f.v*dt/16; f.x+=Math.sin(f.w+=0.01*dt/16)*0.25*dpr; if(f.y>H+4){ f.y=-4; f.x=Math.random()*W; } } }); }
+  function loop(ts){ if(document.hidden){ raf=null; return; } const dt=last?Math.min(50,ts-last):16; last=ts; draw(dt); raf=requestAnimationFrame(loop); }
+  size(); window.addEventListener('resize', size); new ResizeObserver(size).observe(c.parentElement);
+  if(!reduce){ raf=requestAnimationFrame(loop); document.addEventListener('visibilitychange',()=>{ if(!document.hidden&&!raf){ last=0; raf=requestAnimationFrame(loop); } }); }
+}
+/* ---------- Snapshot export (used by the scheduled refresher: open ?snapshot=1 in a headless browser) ---------- */
+async function prefetchAllForSnapshot(){
+  const offices=[...new Set(LOCATIONS.map(l=>l.nws))]; await Promise.all(offices.map(o=>fetchAFD(o)));
+  for(const l of LOCATIONS){ await Promise.all([fetchNwsGrid(l), fetchSnotel(l), fetchEnsemble(l)]); }
+}
+window.__snapshot = async function(){ await prefetchAllForSnapshot(); const models={}; for(const m of MODELS){ const d=state.models[m.id]; if(d&&d.ok) models[m.id]={ok:true,data:d.data,note:d.note,usedId:d.usedId}; }
+  const ens={}; for(const id in state.ens){ ens[id]={}; for(const k in state.ens[id]){ const e=state.ens[id][k]; ens[id][k]= e.bands? {name:e.name,n:e.n,bands:e.bands,finals:e.finals,p:e.p} : {name:e.name,err:e.err}; } }
+  return {fetchedAt:Date.now(), models, afd:state.afd, nwsGrid:state.nwsGrid, snotel:state.snotel, ens}; };
+document.addEventListener('DOMContentLoaded', ()=>{ init(); heroArt(); });
+</script>
+</body></html>
