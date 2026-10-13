@@ -249,6 +249,17 @@ footer{color:var(--fg-3);font-size:12px;padding-block:20px}
 .lbFrame img,.lbFrame iframe{width:100%;height:100%;object-fit:contain;border:0}
 .lbFoot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:13px;color:#9fb0c6;margin-top:8px}
 @media (prefers-reduced-motion:reduce){.rec{animation:none}}
+@media (max-width:640px){
+  .brand .sub{display:none} .brand h1{font-size:24px}
+  header.top .wrap{padding-block:6px;gap:8px} .status{margin-left:0;font-size:11px;gap:6px}
+  nav.tabs button{padding:8px 9px;font-size:14px}
+  .hero{padding:14px} .hero h1{font-size:24px}
+  .stat .value{font-size:24px}
+  .notice,.err{font-size:12px;padding:8px 10px}
+  .wallTitle{font-size:18px} .wallStats .mono{font-size:14px}
+  .routeStrip .stop{flex-basis:210px}
+  .drawer .head h1{font-size:24px}
+}
 .camGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
 .cam{background:var(--panel-3);border:1px solid var(--line);border-radius:10px;overflow:hidden;min-width:0;display:flex;flex-direction:column}
 .cam .frame{position:relative;aspect-ratio:16/9;background:#0b1220;display:flex;align-items:center;justify-content:center;color:#9fb3cc;font-size:12px;overflow:hidden}
