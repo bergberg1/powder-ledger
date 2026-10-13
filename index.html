@@ -202,6 +202,29 @@ details summary{cursor:pointer;color:var(--accent-ink);font-weight:500}
 .nerd td.hot{background:color-mix(in srgb,var(--seq4) 22%,transparent);font-weight:600}
 .dim{opacity:.55}
 footer{color:var(--fg-3);font-size:12px;padding-block:20px}
+.camGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.cam{background:var(--panel-3);border:1px solid var(--line);border-radius:10px;overflow:hidden;min-width:0;display:flex;flex-direction:column}
+.cam .frame{position:relative;aspect-ratio:16/9;background:#0b1220;display:flex;align-items:center;justify-content:center;color:#9fb3cc;font-size:12px;overflow:hidden}
+.cam .frame img,.cam .frame iframe{width:100%;height:100%;object-fit:cover;border:0;display:block}
+.cam .frame .fallback{padding:14px;text-align:center}
+.cam .frame .fallback a{color:#cfe3ff}
+.cam .meta{padding:8px 10px;font-size:12px;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.cam .meta b{font-size:13px}
+.cam .meta .src{color:var(--fg-3);white-space:nowrap}
+.cam .live{position:absolute;top:8px;left:8px;background:rgba(208,59,59,.9);color:#fff;font-size:10px;font-weight:700;letter-spacing:.1em;padding:2px 6px;border-radius:3px}
+.cam .age{position:absolute;bottom:6px;right:8px;background:rgba(0,0,0,.55);color:#fff;font-size:10px;padding:2px 6px;border-radius:3px}
+.camFilters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.gl{border-bottom:1px dotted var(--fg-3);cursor:help}
+.goCard{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.goCard .g{background:var(--panel-3);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.goCard .g .v{font-family:var(--display);font-size:24px;font-weight:700;line-height:1.1}
+.goCard .g .l{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--fg-3)}
+.goCard .g .s{font-size:12px;color:var(--fg-2);margin-top:4px}
+.frameSlider{display:flex;align-items:center;gap:8px;flex:1;min-width:200px}
+.frameSlider input{flex:1;accent-color:var(--accent)}
+.frameSlider .lbl{font-family:var(--display);font-size:15px;min-width:110px}
+.heroHelp{margin-top:10px;font-size:12px}
+.heroHelp a{color:var(--hero-fg);text-decoration:underline;text-underline-offset:3px}
 @media (prefers-reduced-motion:reduce){.dot.busy,.bet,.drawer,.btn{animation:none;transition:none}}
 </style>
 </head>
@@ -222,6 +245,7 @@ footer{color:var(--fg-3);font-size:12px;padding-block:20px}
     <button role="tab" aria-selected="true" data-tab="overview">Overview</button>
     <button role="tab" aria-selected="false" data-tab="storms">Storm timing</button>
     <button role="tab" aria-selected="false" data-tab="compare">Compare</button>
+    <button role="tab" aria-selected="false" data-tab="cams">Cams &amp; roads</button>
     <button role="tab" aria-selected="false" data-tab="sources">Data &amp; methods</button>
   </nav>
   <div class="filters" id="filters">
@@ -290,6 +314,18 @@ footer{color:var(--fg-3);font-size:12px;padding-block:20px}
     </div>
   </section>
 
+  <section id="tab-cams" role="tabpanel" hidden>
+    <div class="card">
+      <h2>Live cams: passes and canyons on the way</h2>
+      <p class="small muted" style="margin:0 0 10px">Still images refresh every 60 seconds; streams play live. A cam that will not load shows a link to its official page instead. Click any image to open the source.</p>
+      <div class="camFilters" id="camFilters"></div>
+      <div class="camGrid" id="camGridPasses"></div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <h2>Resort cams</h2>
+      <div class="camGrid" id="camGridResorts"></div>
+    </div>
+  </section>
   <section id="tab-sources" role="tabpanel" hidden>
     <div class="card sources" id="sources"></div>
   </section>
@@ -369,6 +405,64 @@ const LOCATIONS = [
  {id:'brianhead', name:'Brian Head', short:'Brian Head', state:'UT', region:'Southern Utah', lat:37.683, lon:-112.833, baseFt:9600, summitFt:10920, driveHrs:8.5, nws:'SLC', snotel:'626:UT:SNTL', snotelName:'Midway Valley', snotelVerified:false, avgSnow:360, slrTypical:13, favored:['SW','S','SSW','WSW'], shadowed:['NW','N'], upslope:false, avalanche:'UAC Southwest (intermittent)', why:'Highest base in Utah; feeds on SW flow and cutoff lows over southern Nevada / Arizona.'},
 ];
 LOCATIONS.forEach(l=>{ l.midFt = Math.round((l.baseFt + 2*l.summitFt)/3); });
+/* ===================== Cams =====================
+   kind: 'img' (still image, auto-refreshed), 'youtube' (live stream id), 'iframe', or 'link' (official page only).
+   Entries marked verified:false use a documented URL pattern that could not be tested from the build environment;
+   the page falls back to the official link automatically if the image does not load. */
+window.CAMS = {
+  passes: [
+    {name:'I-70 near Vail Pass (MP 191 WB)', region:'I-70 corridor', provider:'COtrip', kind:'img', refresh:60, verified:false, url:'https://www.cotrip.org/dimages/camera?imageURL=liveview/I70Mile191West9.jpg', page:'https://maps.cotrip.org/list/cameras?searchTerm=Vail%20Pass', near:['vailpass','vail','copper','beavercreek']},
+    {name:'US-6 toward Loveland Pass (MP 216 WB)', region:'I-70 corridor', provider:'COtrip', kind:'img', refresh:60, verified:false, url:'https://www.cotrip.org/dimages/camera?imageURL=liveview/US6Mile216West.jpg', page:'https://maps.cotrip.org/list/cameras?searchTerm=Loveland%20Pass', near:['lovelandpass','abasin','loveland','keystone']},
+    {name:'Eisenhower Tunnel (I-70)', region:'I-70 corridor', provider:'COtrip', kind:'link', page:'https://maps.cotrip.org/list/cameras?searchTerm=Eisenhower', near:['loveland','lovelandpass','abasin','keystone','breck','copper']},
+    {name:'Floyd Hill / Idaho Springs (I-70)', region:'I-70 corridor', provider:'COtrip', kind:'link', page:'https://maps.cotrip.org/list/cameras?searchTerm=Floyd%20Hill', near:['echo','eldora','loveland','winterpark']},
+    {name:'Berthoud Pass (US-40 MP 243)', region:'Front Range', provider:'COtrip', kind:'link', page:'https://maps.cotrip.org/list/cameras?searchTerm=Berthoud', near:['berthoud','winterpark']},
+    {name:'Rabbit Ears Pass (US-40)', region:'Northern Colorado', provider:'COtrip', kind:'link', page:'https://maps.cotrip.org/list/cameras?searchTerm=Rabbit%20Ears', near:['rabbitears','steamboat']},
+    {name:'Wolf Creek Pass (US-160)', region:'San Juans', provider:'COtrip', kind:'link', page:'https://maps.cotrip.org/list/cameras?searchTerm=Wolf%20Creek', near:['wolfcreek','wolfcreekpass']},
+    {name:'Monarch Pass (US-50)', region:'Aspen & Central', provider:'COtrip', kind:'link', page:'https://maps.cotrip.org/list/cameras?searchTerm=Monarch', near:['monarch','crestedbutte']},
+    {name:'Red Mountain Pass (US-550)', region:'San Juans', provider:'COtrip', kind:'link', page:'https://maps.cotrip.org/list/cameras?searchTerm=Red%20Mountain', near:['redmtnpass','silverton','telluride','purgatory']},
+    {name:'Glenwood Canyon (I-70)', region:'I-70 corridor', provider:'COtrip', kind:'link', page:'https://maps.cotrip.org/list/cameras?searchTerm=Glenwood', near:['sunlight','aspen','highlands','snowmass','powderhorn']},
+    {name:'Little Cottonwood: Alta MP 12.16', region:'Cottonwoods', provider:'UDOT', kind:'link', page:'https://cottonwoodcanyons.udot.utah.gov/c4-traffic-camera/little-cottonwood-alta-mp-12-16/', near:['alta','snowbird']},
+    {name:'Little Cottonwood: mouth (SR-209 @ Old Wasatch Blvd)', region:'Cottonwoods', provider:'UDOT', kind:'link', page:'https://cottonwoodcanyons.udot.utah.gov/c4-traffic-camera/little-cottonwood-rd-3335-e-sr-209-old-wasatch-blvd-9710-s-gnt/', near:['alta','snowbird']},
+    {name:'Cottonwood Canyons road status (all cams)', region:'Cottonwoods', provider:'UDOT', kind:'link', page:'https://cottonwoodcanyons.udot.utah.gov/road-information/', near:['alta','snowbird','brighton','solitude']},
+    {name:'Big Cottonwood camera map', region:'Cottonwoods', provider:'UDOT', kind:'link', page:'https://experience.arcgis.com/experience/a8eba972f11b494986c39c1ca3844991', near:['brighton','solitude']},
+    {name:'Parleys Summit (I-80)', region:'Wasatch Back', provider:'UDOT', kind:'link', page:'https://www.udottraffic.utah.gov/', near:['parkcity','deervalley']},
+    {name:'Brian Head (SR-143 MP 18)', region:'Southern Utah', provider:'UDOT', kind:'link', page:'https://www.udottraffic.utah.gov/', near:['brianhead']},
+    {name:'I-80 Summit / Laramie', region:'Wyoming', provider:'WYDOT', kind:'link', page:'https://www.wyoroad.info/Highway/webcameras/all?route=I80Cameras', near:['snowyrange']},
+  ],
+  resorts: {
+    abasin:[{name:'A-Basin mountain cams', provider:'Arapahoe Basin', kind:'link', page:'https://www.arapahoebasin.com/mountain-cams/'}],
+    loveland:[{name:'Loveland webcams', provider:'Loveland', kind:'link', page:'https://skiloveland.com/webcams/'}],
+    keystone:[{name:'Keystone mountain cams', provider:'Vail Resorts', kind:'link', page:'https://www.keystoneresort.com/the-mountain/mountain-conditions/mountain-cams.aspx'}],
+    breck:[{name:'Breckenridge mountain cams', provider:'Vail Resorts', kind:'link', page:'https://www.breckenridge.com/the-mountain/mountain-conditions/mountain-cams.aspx'}],
+    copper:[{name:'Copper webcams', provider:'Copper Mountain', kind:'link', page:'https://www.coppercolorado.com/the-mountain/webcams/'}],
+    vail:[{name:'Vail mountain cams', provider:'Vail Resorts', kind:'link', page:'https://www.vail.com/the-mountain/mountain-conditions/mountain-cams.aspx'}],
+    beavercreek:[{name:'Beaver Creek mountain cams', provider:'Vail Resorts', kind:'link', page:'https://www.beavercreek.com/the-mountain/mountain-conditions/mountain-cams.aspx'}],
+    winterpark:[{name:'Winter Park mountain cams', provider:'Winter Park', kind:'link', page:'https://www.winterparkresort.com/the-mountain/mountain-cams'}],
+    steamboat:[{name:'Steamboat live cams', provider:'Steamboat', kind:'link', page:'https://www.steamboat.com/the-mountain/live-cams'}],
+    aspen:[{name:'Aspen Snowmass mountain cams', provider:'Aspen Snowmass', kind:'link', page:'https://www.aspensnowmass.com/four-mountains/mountain-cams'}],
+    highlands:[{name:'Aspen Snowmass mountain cams', provider:'Aspen Snowmass', kind:'link', page:'https://www.aspensnowmass.com/four-mountains/mountain-cams'}],
+    snowmass:[{name:'Aspen Snowmass mountain cams', provider:'Aspen Snowmass', kind:'link', page:'https://www.aspensnowmass.com/four-mountains/mountain-cams'}],
+    crestedbutte:[{name:'Crested Butte mountain cams', provider:'Vail Resorts', kind:'link', page:'https://www.skicb.com/the-mountain/mountain-conditions/mountain-cams.aspx'}],
+    wolfcreek:[{name:'Wolf Creek webcams', provider:'Wolf Creek', kind:'link', page:'https://wolfcreekski.com/webcams/'}],
+    wolfcreekpass:[{name:'Wolf Creek webcams', provider:'Wolf Creek', kind:'link', page:'https://wolfcreekski.com/webcams/'}],
+    purgatory:[{name:'Purgatory mountain webcams', provider:'Purgatory', kind:'link', page:'https://www.purgatory.ski/mountain/mountain-webcams/'}],
+    telluride:[{name:'Telluride webcams', provider:'Telluride', kind:'link', page:'https://tellurideskiresort.com/webcams/'}],
+    taos:[{name:'Taos weather and base cam', provider:'Taos Ski Valley', kind:'link', page:'https://www.skitaos.com/weather'}],
+    alta:[{name:'Alta cams (OpenSnow)', provider:'OpenSnow', kind:'link', page:'https://opensnow.com/location/alta-ut-us/cams'}],
+    snowbird:[{name:'Snowbird webcams incl. Hidden Peak 360', provider:'Snowbird', kind:'link', page:'https://www.snowbird.com/the-mountain/webcams/view-all-webcams/'}],
+    brighton:[{name:'Brighton live cameras', provider:'Brighton', kind:'link', page:'https://help.brightonresort.com/s/article/Live-Cameras'}],
+    solitude:[{name:'Solitude webcams (YouTube live)', provider:'Solitude', kind:'link', page:'https://www.solitudemountain.com/mountain-and-village/webcams'}],
+    parkcity:[{name:'Park City mountain cams', provider:'Vail Resorts', kind:'link', page:'https://www.parkcitymountain.com/the-mountain/mountain-conditions/mountain-cams.aspx'}],
+    deervalley:[{name:'Deer Valley webcams', provider:'Deer Valley', kind:'link', page:'https://www.deervalley.com/explore-the-mountain/webcams'}],
+    snowbasin:[{name:'Snowbasin web cams', provider:'Snowbasin', kind:'link', page:'https://www.snowbasin.com/the-mountain/web-cams/'}],
+    powdermtn:[{name:'Powder Mountain webcams', provider:'Powder Mountain', kind:'link', page:'https://www.living.powdermountain.com/resort/the-mountain/conditions/webcams'}],
+    sundance:[{name:'Sundance webcams', provider:'Sundance', kind:'link', page:'https://www.sundanceresort.com/webcams/'}],
+    brianhead:[{name:'Brian Head webcams', provider:'Brian Head', kind:'link', page:'https://www.brianhead.com/weather-conditions-webcams/'}],
+    jackson:[{name:'Jackson Hole live mountain cams', provider:'Jackson Hole', kind:'link', page:'https://www.jacksonhole.com/live-mountain-cams'}],
+    targhee:[{name:'Grand Targhee webcams (YouTube live)', provider:'Grand Targhee', kind:'link', page:'https://www.grandtarghee.com/the-mountain/cams-conditions/webcams'}],
+    snowyrange:[{name:'Laramie area webcams', provider:'Visit Laramie', kind:'link', page:'https://www.visitlaramie.org/plan-your-visit/webcams/'}],
+  }
+};
 /* ===================== Core: config, fetch, derived metrics ===================== */
 const TZ = 'America/Denver';
 const CACHE_TTL_MS = 30*60*1000;
@@ -694,8 +788,10 @@ function renderHero(){
   else { const w=wins[0]; const firstHit = regionsFirstHit(locs, w); const first=firstHit[0], last=firstHit[firstHit.length-1];
     head=`${wins.length>1?'Storm 1 of '+wins.length:'One storm'} arrives ${fmtDT(w.start)}${first&&last&&first.r!==last.r&&last.t-first.t>=3*3600?`, hitting ${first.r} first and reaching ${last.r} by ${fmtDT(last.t)}`:first&&last&&first.r!==last.r?`, hitting ${first.r} and ${last.r} together`:''}`;
     sub=`${w.flow?`Steering flow at 700 mb is <b>${degToCompass(w.flow.dir)} at ${f0(w.flow.spd)} mph</b>, so ${flowMeaning(w.flow.dir)}. `:''}Biggest total in this window: <b>${esc(w.top[0].l.name)} ${inch(w.top[0].v)} in</b>. Over the full 7 days the leader is <b>${esc(top.l.name)} at ${inch(top.D.d7)} in</b> (models ${inch(top.D.mn)}–${inch(top.D.mx)}, agreement ${top.D.conf.t}).`; }
-  H.innerHTML=`<div class="grid"><div><div class="eyebrow">This week's headline · ${new Date().toLocaleDateString('en-US',{timeZone:TZ,weekday:'long',month:'short',day:'numeric'})}</div><h1>${head}</h1><p>${sub}</p></div>
+  H.innerHTML=`<div class="grid"><div style="display:contents"><div><div class="eyebrow">This week's headline · ${new Date().toLocaleDateString('en-US',{timeZone:TZ,weekday:'long',month:'short',day:'numeric'})}</div><h1>${head}</h1><p>${sub}</p></div>
+    <div class="heroHelp">New here? <a href="#" data-goto="sources">How to read this page</a> · <a href="#" data-goto="cams">Live cams</a></div></div>
     <div class="windows">${wins.slice(0,3).map((w,i)=>`<div class="win"><b>Storm ${i+1} · ${fmtDT(w.start)} → ${fmtDT(w.end)}</b><div class="r">${Math.round((w.end-w.start)/3600)} h · ${w.flow?degToCompass(w.flow.dir)+' '+f0(w.flow.spd)+' mph at 700 mb':'flow n/a'} · top: ${w.top.slice(0,3).map(x=>esc(x.l.short||x.l.name)+' '+inch(x.v)).join(', ')}</div></div>`).join('')||'<div class="win"><b>No storm windows</b><div class="r">Nothing reaches 0.15 in/hr at any selected location.</div></div>'}</div></div>`;
+  $$('#hero [data-goto]').forEach(a=>a.onclick=e=>{ e.preventDefault(); $(`nav.tabs button[data-tab=${a.dataset.goto}]`).click(); window.scrollTo({top:0}); });
   // best bets: rank by powder score within filter
   const bets=[...locs].sort((a,b)=>b.D.powder.total-a.D.powder.total).slice(0,4);
   $('#bets').innerHTML = bets.map((x,i)=>{ const D=x.D,l=x.l; const fl=fitLabel(D.fit7,D.flow7); const reasons=[]; if(D.d3>=4) reasons.push(`${inch(D.d3)} in in 72 h`); if(D.powder.slr3&&D.powder.slr3>=14) reasons.push(`light ${Math.round(D.powder.slr3)}:1 snow`); else if(D.powder.slr3&&D.powder.slr3<10) reasons.push(`dense ${Math.round(D.powder.slr3)}:1 snow`); if(D.powder.gust!=null) reasons.push(D.powder.gust<25?'calm winds':D.powder.gust<40?`gusts to ${f0(D.powder.gust)} mph`:`wind-hold risk, gusts ${f0(D.powder.gust)} mph`); if(D.fit7!=null&&D.fit7>=0.4) reasons.push('terrain lines up with the flow'); if(D.fit7!=null&&D.fit7<=-0.4) reasons.push('shadowed in this flow'); reasons.push(`${D.conf.t} agreement`);
@@ -790,15 +886,24 @@ const RANGES=[{n:'WASATCH',lat:41.0,lon:-111.62},{n:'UINTAS',lat:40.72,lon:-110.
 let mapTimer=null;
 function renderMapDays(){
   const D=state.derived[LOCATIONS[0].id]; if(!D) return;
-  const days=D.days;
-  $('#mapDays').innerHTML = `<button class="play" id="mapPlay" title="Animate day by day">${mapTimer?'■ Stop':'▶ Play'}</button><button aria-pressed="${state.mapDay==='all'}" data-d="all">7-day total</button>`+days.map(d=>`<button aria-pressed="${state.mapDay===d.d}" data-d="${d.d}">${d.label.split(',')[0]}</button>`).join('');
-  $$('#mapDays button[data-d]').forEach(b=>b.onclick=()=>{ stopMap(); state.mapDay = b.dataset.d==='all'?'all':+b.dataset.d; renderMapDays(); renderMap(); });
-  $('#mapPlay').onclick=()=>{ if(mapTimer){ stopMap(); renderMapDays(); return; } let k=0; const step=()=>{ state.mapDay=days[k%days.length].d; k++; renderMapDays(); renderMap(); }; step(); mapTimer=setInterval(step, 1100); renderMapDays(); };
+  const frs=frameList(); if(state.mapFrame>=frs.length) state.mapFrame=0;
+  const cur=frs[state.mapFrame];
+  let html=`<button class="play" id="mapPlay" title="Animate through the week">${mapTimer?'■ Stop':'▶ Play'}</button>`;
+  html+=`<button aria-pressed="${state.mapMode==='day'&&state.mapDay==='all'}" data-d="all">7-day total</button>`;
+  html+=`<button aria-pressed="${state.mapMode==='6h'}" data-mode="6h" title="Six-hour frames">6-hour frames</button>`;
+  if(state.mapMode==='day') html+=frs.map(d=>`<button aria-pressed="${state.mapDay===d.key}" data-d="${d.key}">${d.label.split(',')[0]}</button>`).join('');
+  else html+=`<div class="frameSlider"><input type="range" id="frameRange" min="0" max="${frs.length-1}" value="${state.mapFrame}" aria-label="Six-hour frame"><span class="lbl">${cur?cur.label:''}</span></div>`;
+  $('#mapDays').innerHTML=html;
+  $$('#mapDays button[data-d]').forEach(b=>b.onclick=()=>{ stopMap(); state.mapMode='day'; state.mapDay = b.dataset.d==='all'?'all':+b.dataset.d; state.mapFrame=Math.max(0,frs.findIndex(f=>f.key===state.mapDay)); renderMapDays(); renderMap(); });
+  const mb=$('#mapDays button[data-mode]'); if(mb) mb.onclick=()=>{ stopMap(); state.mapMode= state.mapMode==='6h'?'day':'6h'; state.mapFrame=0; if(state.mapMode==='day') state.mapDay='all'; renderMapDays(); renderMap(); };
+  const rg=$('#frameRange'); if(rg) rg.oninput=()=>{ stopMap(); state.mapFrame=+rg.value; const f=frameList()[state.mapFrame]; $('#mapDays .lbl').textContent=f.label; renderMap(); };
+  $('#mapPlay').onclick=()=>{ if(mapTimer){ stopMap(); renderMapDays(); return; } const list=frameList(); let k=state.mapMode==='day'?0:state.mapFrame; const step=()=>{ const f=list[k%list.length]; state.mapFrame=k%list.length; if(state.mapMode==='day') state.mapDay=f.key; k++; renderMapDays(); renderMap(); }; step(); mapTimer=setInterval(step, state.mapMode==='day'?1100:450); renderMapDays(); };
 }
 function stopMap(){ if(mapTimer){ clearInterval(mapTimer); mapTimer=null; } }
 function dayVal(D, dKey){ if(dKey==='all') return {snow:D.d7, flow:D.flow7, fit:D.fit7}; const d=D.days.find(x=>x.d===dKey); return d? {snow:d.blend, flow:d.flow, fit:d.fit} : {snow:0}; }
+function curFrame(){ const frs=frameList(); if(state.mapMode==='day') return state.mapDay==='all'? {key:'all',label:'7-day total'} : (frs.find(f=>f.key===state.mapDay)||{key:'all',label:'7-day total'}); return frs[Math.min(state.mapFrame, frs.length-1)]; }
 function renderMap(){
-  const vals=visRows().map(x=>Object.assign(x, dayVal(x.D,state.mapDay)));
+  const fr=curFrame(); const vals=visRows().map(x=>Object.assign(x, fr.key==='all'? dayVal(x.D,'all') : frameVal(x.D, fr)));
   const max=Math.max(2,...vals.map(v=>v.snow||0));
   const rect=(a,b,c,d)=>`M${px(a)},${py(b)}L${px(c)},${py(b)}L${px(c)},${py(d)}L${px(a)},${py(d)}Z`;
   const states = `<rect class="mapbg" x="0" y="0" width="${MAP.W}" height="${MAP.H}" rx="8"/>
@@ -820,9 +925,14 @@ function renderMap(){
     const tip = `<b>${esc(v.l.name)}</b> ${v.l.state}<br>${state.mapDay==='all'?'7-day':'day'} blended: <b>${inch(v.snow)} in</b>${v.flow?`<br>700 mb flow: ${degToCompass(v.flow.dir)} ${f0(v.flow.spd)} mph · ${fitLabel(v.fit,v.flow).t}`:''}<br><span class="muted">click for the why</span>`;
     return `<g class="loc" tabindex="0" data-id="${v.l.id}" data-tip="${esc(tip)}" style="cursor:pointer">${arrow}${heavy?`<circle cx="${x}" cy="${y}" r="${r+6}" fill="${col}" opacity=".25" filter="url(#glow)"/>`:''}<circle cx="${x}" cy="${y}" r="${r}" fill="${col==='transparent'?'var(--panel)':col}" stroke="var(--fg-2)" stroke-width="1" fill-opacity="${col==='transparent'?1:.9}"/>${(labelSet.has(v.l.id)&&(v.snow||0)>0.5)||v.l.pin?`<text x="${x}" y="${y-r-(v.flow?12:4)}" text-anchor="middle" font-size="10" font-weight="600" fill="var(--fg)" paint-order="stroke" stroke="var(--panel)" stroke-width="3">${esc(v.l.short||v.l.name)}</text>`:''}</g>`;
   }).join('');
-  const dayLabel = state.mapDay==='all'? '7-day total' : (vals[0]&&vals[0].D.days.find(d=>d.d===state.mapDay)||{}).label||'';
-  $('#map').innerHTML = `<svg viewBox="0 0 ${MAP.W} ${MAP.H}" role="img" aria-label="Map of forecast snowfall"><defs><filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6"/></filter></defs>${states}${roads}${ranges}${cities}${dots}<text x="${MAP.W-10}" y="22" text-anchor="end" font-family="var(--display)" font-size="20" font-weight="700" fill="var(--fg)">${esc(dayLabel)}</text></svg>`;
-  $('#mapLegend').innerHTML = `<span>Dot size and shade = blended snowfall (max ${inch(max)} in)</span><span><span class="sw" style="background:var(--seq2)"></span>light</span><span><span class="sw" style="background:var(--seq4)"></span>moderate</span><span><span class="sw" style="background:var(--seq7)"></span>heavy</span><span>→ arrow = where the 700 mb wind blows during precipitation (length = speed)</span><span><span class="ln" style="background:var(--road)"></span>interstates and highways</span>`;
+  const dayLabel = fr.label||'';
+  // storm track: the 500 mb low centre per frame, drawn as a path with the current frame highlighted
+  let trackSvg=''; const tr=stormTrack().filter(Boolean);
+  if(tr.length>1){ const pts=tr.map(x=>[px(x.l.lon),py(x.l.lat)]); trackSvg+=`<path d="M${pts.map(p=>p.join(',')).join('L')}" fill="none" stroke="var(--s7)" stroke-width="2" stroke-dasharray="5 4" opacity=".8"/>`;
+    const curIdx = fr.key==='all'? -1 : tr.findIndex(x=>x.fr.key===fr.key);
+    tr.forEach((x,k)=>{ const [X,Y]=pts[k]; const on=k===curIdx; trackSvg+=`<g data-tip="${esc(`<b>500 mb low centre</b><br>${x.fr.label}<br>lowest heights near ${x.l.name} (${f0(x.v)} m)`)}"><circle cx="${X}" cy="${Y}" r="${on?13:6}" fill="${on?'var(--s7)':'var(--panel)'}" stroke="var(--s7)" stroke-width="2"/><text x="${X}" y="${Y+(on?5:3.5)}" text-anchor="middle" font-size="${on?15:9}" font-weight="800" fill="${on?'#fff':'var(--s7)'}" font-family="var(--display)">L</text></g>`; }); }
+  $('#map').innerHTML = `<svg viewBox="0 0 ${MAP.W} ${MAP.H}" role="img" aria-label="Map of forecast snowfall"><defs><filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6"/></filter></defs>${states}${roads}${ranges}${cities}${trackSvg}${dots}<text x="${MAP.W-10}" y="22" text-anchor="end" font-family="var(--display)" font-size="20" font-weight="700" fill="var(--fg)">${esc(dayLabel)}</text></svg>`;
+  $('#mapLegend').innerHTML = `<span>Dot size and shade = blended snowfall (max ${inch(max)} in)</span><span><span class="sw" style="background:var(--seq2)"></span>light</span><span><span class="sw" style="background:var(--seq4)"></span>moderate</span><span><span class="sw" style="background:var(--seq7)"></span>heavy</span><span>→ arrow = where the 700 mb wind blows during precipitation (length = speed)</span><span><span class="ln" style="background:var(--road)"></span>interstates and highways</span><span><b style="color:var(--s7)">L</b> = 500 mb low centre each frame (the storm track); dashed line = its path through the week</span>`;
   bindTips($('#map'));
   $$('#map .loc').forEach(g=>{ g.onclick=()=>openDetail(g.dataset.id); g.onkeydown=e=>{ if(e.key==='Enter') openDetail(g.dataset.id); }; });
 }
@@ -905,8 +1015,10 @@ async function openDetail(id){
       <div class="stat"><div class="label">Agreement</div><div class="value"><span class="pill ${D.conf.cls}" style="font-size:16px">${D.conf.t}</span></div></div>
       <div class="stat"><div class="label">Flow fit</div><div class="value"><span class="pill ${fitLabel(D.fit7,D.flow7).cls}" style="font-size:16px">${fitLabel(D.fit7,D.flow7).t}</span></div><div class="sub">${D.flow7?degToCompass(D.flow7.dir)+' '+f0(D.flow7.spd)+' mph at 700 mb':'—'}</div></div>
     </div>
-    <h2>Why this number</h2>
-    <div class="why" id="why">${whyText(l,D)}</div>
+    <h2>When to go</h2>
+    <div class="card" id="whenToGo"></div>
+    <h2 style="margin-top:16px">Why this number</h2>
+    <div class="why" id="why">${gloss(whyText(l,D))}</div>
     <div class="twocol" style="margin-top:16px">
       <div class="card"><h2>Daily snowfall by model</h2><div id="chDaily"></div><div class="legendRow" id="lgDaily"></div></div>
       <div class="card"><h2>Cumulative snowfall</h2><div id="chCum"></div><div class="legendRow" id="lgCum"></div><div style="margin-top:8px"><button class="btn sm" id="btnEns">Load ensembles (ECMWF 51 + GEFS 31 members)</button> <span class="small muted" id="ensNote"></span></div><div id="ensStats"></div></div>
@@ -921,10 +1033,11 @@ async function openDetail(id){
       <div class="card"><h2>SNOTEL ground truth</h2><div id="snotel" class="small muted">${l.snotel?'Loading…':'No SNOTEL assigned.'}</div></div>
     </div>
     <div class="card" style="margin-top:16px"><h2>Forecaster's discussion — NWS ${l.nws}</h2><p class="small muted" style="margin:0 0 8px">The Area Forecast Discussion is where the human forecaster explains the reasoning, model preferences and confidence. Mountain-relevant words are highlighted.</p><div id="afd" class="small muted">Loading…</div></div>
+    <div class="card" style="margin-top:16px"><h2>Live cams</h2><div id="detailCams"></div></div>
     <div class="card" style="margin-top:16px"><h2>Every hour, every model</h2><details><summary>Open the full hourly table (${D.n-D.startIdx} hours)</summary><div id="nerd" style="overflow:auto;max-height:480px;margin-top:8px"></div></details></div>
     <div class="card" style="margin-top:16px"><h2>Go deeper</h2><div id="links"></div></div>`;
   $('#btnClose').onclick=closeDetail;
-  drawDaily(l,D); drawCum(l,D,null); drawHourly(l,D); drawDayTable(l,D); drawRose(l,D); drawLinks(l); drawNerd(l,D);
+  drawWhenToGo(l,D); drawDaily(l,D); drawCum(l,D,null); drawHourly(l,D); drawDayTable(l,D); drawRose(l,D); drawLinks(l); drawNerd(l,D); drawDetailCams(l); bindTips($('#why'));
   if(state.ens[l.id]){ drawCum(l,D,state.ens[l.id]); drawEnsStats(l,state.ens[l.id]); $('#btnEns').hidden=true; }
   $('#btnEns').onclick=async()=>{ $('#btnEns').disabled=true; $('#ensNote').textContent='Loading ~80 ensemble members…'; const e=await fetchEnsemble(l); drawCum(l,D,e); drawEnsStats(l,e); $('#ensNote').textContent=''; };
   fetchNwsGrid(l).then(g=>drawNws(l,g)); fetchSnotel(l).then(s=>drawSnotel(l,s)); fetchAFD(l.nws).then(a=>drawAfd(l,a));
@@ -1127,6 +1240,104 @@ function compareNarrative(xs){
   if(B.D.fzl7&&mFt(B.D.fzl7)-1000>B.l.baseFt) reasons.push(`${esc(B.l.name)} also loses some to rain or mix at the base (snow level ≈ ${f0(mFt(B.D.fzl7)-1000)} ft)`);
   return `<p><b>${esc(A.l.name)} beats ${esc(B.l.name)} by ${inch(A.D.d7-B.D.d7)} in</b> in the blend${reasons.length?' because '+reasons.join('; '):''}.</p><p class="small muted">Confidence: ${A.l.name} ${A.D.conf.t}, ${B.l.name} ${B.D.conf.t}. ${A.D.conf.cls==='low'||B.D.conf.cls==='low'?'At least one side has low model agreement, so this ranking could flip with the next runs.':''}</p>`;
 }
+/* ===================== Extras: storm track, frames, when-to-go, glossary, cams ===================== */
+state.mapMode = state.mapMode || 'day'; state.mapFrame = state.mapFrame || 0;
+function frameList(){ const D=state.derived[LOCATIONS[0].id]; if(!D) return []; if(state.mapMode==='day') return D.days.map(d=>({key:d.d, label:d.label, a:null}));
+  const out=[]; for(let i=D.startIdx;i<D.n;i+=6){ const b=Math.min(D.n,i+6); out.push({key:i, label:`${fmtDay(D.times[i]).split(',')[0]} ${fmtHour(D.times[i])}–${fmtHour(D.times[b-1])}`, a:i, b}); } return out; }
+function frameVal(D, fr){
+  if(state.mapMode==='day') return dayVal(D, fr.key);
+  let snow=0; for(let i=fr.a;i<fr.b;i++) snow+=D.blend[i]||0;
+  let flow=null; const p=D.pres; if(p&&p.h.wind_direction_700hPa){ const dirs=[],spds=[],w=[]; for(let i=fr.a;i<fr.b;i++){ const j=p.map.get(D.times[i]); if(j==null) continue; dirs.push(p.h.wind_direction_700hPa[j]); spds.push(p.h.wind_speed_700hPa[j]); w.push((p.h.snowfall&&p.h.snowfall[j]||0)+0.001); } flow=vecMean(dirs,spds,w); }
+  return {snow, flow, fit: flow? fitScore(LOCATIONS.find(l=>state.derived[l.id]===D), flow.dir, flow.steady, flow.spd) : null};
+}
+// Storm track: where the 500 mb low centre sits in each frame (lowest height among all locations)
+function stormTrack(){
+  const frs=frameList(); const locs=LOCATIONS.map(l=>({l,D:state.derived[l.id]})).filter(x=>x.D&&x.D.pres&&x.D.pres.h.geopotential_height_500hPa);
+  if(!locs.length) return [];
+  return frs.map(fr=>{ let best=null; locs.forEach(x=>{ let v=null; if(state.mapMode==='day'){ const d=x.D.days.find(q=>q.d===fr.key); v=d?d.h500:null; } else { const p=x.D.pres; const vals=[]; for(let i=fr.a;i<fr.b;i++){ const j=p.map.get(x.D.times[i]); if(j!=null&&p.h.geopotential_height_500hPa[j]!=null) vals.push(p.h.geopotential_height_500hPa[j]); } v=vals.length?mean(vals):null; } if(v!=null&&(!best||v<best.v)) best={v, l:x.l}; });
+    // also the mean height for context: low centre only matters if it is well below the regional mean
+    let all=[]; locs.forEach(x=>{ if(state.mapMode==='day'){ const d=x.D.days.find(q=>q.d===fr.key); if(d&&d.h500!=null) all.push(d.h500); } }); const spread = all.length? Math.max(...all)-Math.min(...all) : null;
+    return best? {fr, l:best.l, v:best.v, spread} : null; });
+}
+/* ---------- When to go ---------- */
+function whenToGo(l, D){
+  const t=D.times, a=D.startIdx, n=D.n; const out={};
+  // best powder morning: snow in the 24 h ending at 8 AM local on each day
+  let best=null; D.days.forEach(d=>{ const end=t.findIndex(tt=>tt>=d.t+8*3600); if(end<0) return; let s=0, c=0; for(let i=Math.max(a,end-24);i<end;i++){ s+=D.blend[i]||0; c++; } if(c>=12 && (!best||s>best.s)) best={d, s}; });
+  out.morning=best;
+  // best 6-hour window
+  let win=null; for(let i=a;i+6<=n;i++){ let s=0; for(let k=i;k<i+6;k++) s+=D.blend[k]||0; if(!win||s>win.s) win={i,s}; } out.window=win? {start:t[win.i], end:t[win.i+5]+3600, s:win.s} : null;
+  // first day with 6 in+ in the previous 48 h (base-building marker)
+  let first=null; for(let i=a;i<n;i++){ let s=0; for(let k=Math.max(a,i-48);k<=i;k++) s+=D.blend[k]||0; if(s>=6){ first=t[i]; break; } } out.sixIn=first;
+  // verdict
+  const p=D.powder.total; out.verdict = D.d3<1? 'Skip the drive this week unless it is a bluebird day you want.' : p>=70? 'Go. This is a real storm cycle for this mountain.' : p>=50? 'Worth it if the timing works; plan around the best morning.' : p>=30? 'Marginal. Snow is coming but something (amount, wind, density or confidence) is holding it back.' : 'Not yet. Keep watching the runs.';
+  return out;
+}
+function drawWhenToGo(l, D){
+  const w=whenToGo(l,D); const el=$('#whenToGo'); if(!el) return;
+  el.innerHTML=`<p style="margin:0 0 10px;font-size:15px"><b>${esc(w.verdict)}</b></p><div class="goCard">
+    <div class="g"><div class="l">Best powder morning</div><div class="v">${w.morning&&w.morning.s>=1?w.morning.d.label.split(',')[0]:'—'}</div><div class="s">${w.morning&&w.morning.s>=1?`${inch(w.morning.s)} in in the 24 h before 8 AM`:'nothing over an inch overnight this week'}</div></div>
+    <div class="g"><div class="l">Heaviest 6 hours</div><div class="v">${w.window&&w.window.s>=0.5?fmtDT(w.window.start):'—'}</div><div class="s">${w.window&&w.window.s>=0.5?`${inch(w.window.s)} in through ${fmtHour(w.window.end)}`:'no concentrated burst'}</div></div>
+    <div class="g"><div class="l">6 in on the ground by</div><div class="v">${w.sixIn?fmtDT(w.sixIn):'—'}</div><div class="s">${w.sixIn?'first time 48-h snowfall reaches 6 in':'not reached in 7 days'}</div></div>
+    <div class="g"><div class="l">Powder score</div><div class="v">${D.powder.total}<span style="font-size:14px;color:var(--fg-3)">/100</span></div><div class="s">next 72 h: amount, ratio, wind, agreement, fit</div></div>
+  </div>`;
+}
+/* ---------- Glossary tooltips ---------- */
+const GLOSS = [
+  [/700 mb/g, '700 millibars: the pressure level about 10,000 ft up, close to ridge-top height in these ranges. Wind and temperature here decide which slopes get lifted air and how dense the snow is.'],
+  [/500 mb/g, '500 millibars: about 18,000 ft up, where forecasters track the jet stream and the trough/ridge pattern. Heights fall as a storm (trough) approaches.'],
+  [/trough axis/g, 'The line of lowest upper-air heights, the core of the storm system. Snow is usually heaviest just ahead of it and turns colder behind it.'],
+  [/ratio of/g, 'Snow-to-liquid ratio: inches of snow per inch of melted water. 10:1 is average, 15:1 and up is light powder, under 8:1 is heavy.'],
+  [/freezing level/gi, 'The height where the air is 32°F. Snow usually survives down to roughly 1,000 ft below it, which is the snow level.'],
+  [/ensemble/g, 'Dozens of runs of the same model with slightly different starting conditions. Their spread shows how certain the forecast is.'],
+  [/orographic/gi, 'Lifting of air by terrain. Windward slopes squeeze out extra snow; lee slopes dry out.'],
+  [/upslope/gi, 'Easterly wind pushed up the east side of the Front Range, the classic Denver-area big-snow setup.'],
+  [/cutoff low/gi, 'A storm that has pinched off from the jet stream and spins in place, often over the Four Corners. Slow-moving, warm, and hard for models to time.'],
+];
+function gloss(html){ let out=html; GLOSS.forEach(([re,tip])=>{ let done=false; out=out.replace(re, m=> done? m : (done=true, `<span class="gl" data-tip="${esc(tip)}">${m}</span>`)); }); return out; }
+/* ---------- Cams ---------- */
+const CAMS = window.CAMS || {passes:[], resorts:{}};
+CAMS.passes.forEach(c=>{ if(c.kind==='img'&&c.verified===false) c.sub=(c.sub?c.sub+' · ':'')+'feed URL untested, falls back to the official page'; });
+function camCard(c){
+  const id='cam'+Math.random().toString(36).slice(2,8); const isImg=c.kind==='img';
+  const frame = isImg? `<a href="${esc(c.page||c.url)}" target="_blank" rel="noopener"><img id="${id}" alt="${esc(c.name)}" loading="lazy" referrerpolicy="no-referrer"></a><span class="age" id="${id}-age"></span>`
+    : c.kind==='youtube'? `<iframe src="https://www.youtube.com/embed/${esc(c.id)}?autoplay=0&mute=1&rel=0" title="${esc(c.name)}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen loading="lazy"></iframe><span class="live">LIVE</span>`
+    : c.kind==='iframe'? `<iframe src="${esc(c.url)}" title="${esc(c.name)}" loading="lazy" allowfullscreen></iframe>`
+    : `<div class="fallback"><a href="${esc(c.page)}" target="_blank" rel="noopener">${esc(c.name)} ↗</a><br><span class="muted">opens the official cam page</span></div>`;
+  return `<div class="cam" data-region="${esc(c.region||'')}"><div class="frame">${frame}</div><div class="meta"><div><b>${esc(c.name)}</b><div class="muted">${esc(c.sub||'')}</div></div><a class="src" href="${esc(c.page||c.url||'#')}" target="_blank" rel="noopener">${esc(c.provider||'source')} ↗</a></div></div>`;
+}
+const camTimers=[];
+function renderCams(){
+  const passes=CAMS.passes||[]; const regions=[...new Set(passes.map(c=>c.region).filter(Boolean))];
+  state.camRegion = state.camRegion||'';
+  $('#camFilters').innerHTML = `<button class="chip" aria-pressed="${!state.camRegion}" data-r="">All</button>`+regions.map(r=>`<button class="chip" aria-pressed="${state.camRegion===r}" data-r="${esc(r)}">${esc(r)}</button>`).join('');
+  $$('#camFilters .chip').forEach(b=>b.onclick=()=>{ state.camRegion=b.dataset.r; renderCams(); });
+  const shown=passes.filter(c=>!state.camRegion||c.region===state.camRegion);
+  $('#camGridPasses').innerHTML = shown.length? shown.map(camCard).join('') : '<p class="muted">No pass cams configured yet.</p>';
+  const res=Object.entries(CAMS.resorts||{}).flatMap(([id,list])=>{ const l=LOCATIONS.find(x=>x.id===id); return (list||[]).map(c=>Object.assign({sub:l?l.name+' · '+l.state:''}, c)); });
+  $('#camGridResorts').innerHTML = res.length? res.map(camCard).join('') : '<p class="muted">No resort cams configured yet.</p>';
+}
+// images: load with cache-busting, refresh every 60 s, fall back to a link on error
+function mountCamImages(root, cams){
+  const cards=[...root.querySelectorAll('.cam')]; cards.forEach((card,k)=>{ const c=cams[k]; const img=card.querySelector('img'); if(!img||!c||c.kind!=='img') return;
+    const load=()=>{ const u=c.url+(c.url.includes('?')?'&':'?')+'t='+Date.now(); img.src=u; const age=card.querySelector('.age'); if(age) age.textContent='updated '+new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}); };
+    img.onerror=()=>{ card.querySelector('.frame').innerHTML=`<div class="fallback"><a href="${esc(c.page||c.url)}" target="_blank" rel="noopener">${esc(c.name)} ↗</a><br><span class="muted">this feed blocks embedding; opens the official page</span></div>`; };
+    load(); camTimers.push(setInterval(load, (c.refresh||60)*1000)); });
+}
+function renderCamsTab(){
+  camTimers.forEach(t=>clearInterval(t)); camTimers.length=0;
+  const passes=(CAMS.passes||[]).filter(c=>!state.camRegion||c.region===state.camRegion);
+  renderCams();
+  const res=Object.entries(CAMS.resorts||{}).flatMap(([id,list])=>list||[]);
+  mountCamImages($('#camGridPasses'), passes); mountCamImages($('#camGridResorts'), res);
+}
+function drawDetailCams(l){
+  const el=$('#detailCams'); if(!el) return;
+  const mine=(CAMS.resorts&&CAMS.resorts[l.id])||[]; const near=(CAMS.passes||[]).filter(c=>(c.near||[]).includes(l.id));
+  const list=[...mine, ...near];
+  if(!list.length){ el.innerHTML=`<p class="small muted">No cams wired for this location yet. <a href="${esc(l.camPage||'#')}" target="_blank" rel="noopener">${l.camPage?'Official webcam page ↗':''}</a></p>`; return; }
+  el.innerHTML=`<div class="camGrid">${list.map(camCard).join('')}</div>`; mountCamImages(el, list);
+}
 /* ===================== Sources & methods tab ===================== */
 function renderSources(){
   $('#sources').innerHTML = `
@@ -1245,7 +1456,7 @@ function init(){
   $('#blendMode').onchange=e=>{ state.prefs.blendMode=e.target.value; savePrefs(); computeAll(); renderAll(); if(state.selected) openDetail(state.selected); };
   $('#btnRefresh').onclick=()=>loadAll(true);
   $('#btnTheme').onclick=()=>{ const cur=document.documentElement.getAttribute('data-theme'); const sysDark=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches; const isDark= cur? cur==='dark' : sysDark; state.prefs.theme= isDark?'light':'dark'; savePrefs(); applyTheme(); };
-  $$('nav.tabs button').forEach(b=>b.onclick=()=>{ $$('nav.tabs button').forEach(x=>x.setAttribute('aria-selected', x===b)); $$('[role=tabpanel]').forEach(p=>p.hidden = p.id!=='tab-'+b.dataset.tab); $('#filters').hidden = b.dataset.tab==='sources'; });
+  $$('nav.tabs button').forEach(b=>b.onclick=()=>{ $$('nav.tabs button').forEach(x=>x.setAttribute('aria-selected', x===b)); $$('[role=tabpanel]').forEach(p=>p.hidden = p.id!=='tab-'+b.dataset.tab); $('#filters').hidden = b.dataset.tab==='sources'||b.dataset.tab==='cams'; if(b.dataset.tab==='cams') renderCamsTab(); else { camTimers.forEach(t=>clearInterval(t)); camTimers.length=0; } });
   $('#scrim').onclick=closeDetail; document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeDetail(); });
   renderRegionChips(); renderSources(); renderCompareOptions();
   $('#ledger thead').innerHTML='<tr>'+COLS.map(c=>`<th>${c.t}</th>`).join('')+'</tr>';

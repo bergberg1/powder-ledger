@@ -47,8 +47,10 @@ function renderHero(){
   else { const w=wins[0]; const firstHit = regionsFirstHit(locs, w); const first=firstHit[0], last=firstHit[firstHit.length-1];
     head=`${wins.length>1?'Storm 1 of '+wins.length:'One storm'} arrives ${fmtDT(w.start)}${first&&last&&first.r!==last.r&&last.t-first.t>=3*3600?`, hitting ${first.r} first and reaching ${last.r} by ${fmtDT(last.t)}`:first&&last&&first.r!==last.r?`, hitting ${first.r} and ${last.r} together`:''}`;
     sub=`${w.flow?`Steering flow at 700 mb is <b>${degToCompass(w.flow.dir)} at ${f0(w.flow.spd)} mph</b>, so ${flowMeaning(w.flow.dir)}. `:''}Biggest total in this window: <b>${esc(w.top[0].l.name)} ${inch(w.top[0].v)} in</b>. Over the full 7 days the leader is <b>${esc(top.l.name)} at ${inch(top.D.d7)} in</b> (models ${inch(top.D.mn)}–${inch(top.D.mx)}, agreement ${top.D.conf.t}).`; }
-  H.innerHTML=`<div class="grid"><div><div class="eyebrow">This week's headline · ${new Date().toLocaleDateString('en-US',{timeZone:TZ,weekday:'long',month:'short',day:'numeric'})}</div><h1>${head}</h1><p>${sub}</p></div>
+  H.innerHTML=`<div class="grid"><div style="display:contents"><div><div class="eyebrow">This week's headline · ${new Date().toLocaleDateString('en-US',{timeZone:TZ,weekday:'long',month:'short',day:'numeric'})}</div><h1>${head}</h1><p>${sub}</p></div>
+    <div class="heroHelp">New here? <a href="#" data-goto="sources">How to read this page</a> · <a href="#" data-goto="cams">Live cams</a></div></div>
     <div class="windows">${wins.slice(0,3).map((w,i)=>`<div class="win"><b>Storm ${i+1} · ${fmtDT(w.start)} → ${fmtDT(w.end)}</b><div class="r">${Math.round((w.end-w.start)/3600)} h · ${w.flow?degToCompass(w.flow.dir)+' '+f0(w.flow.spd)+' mph at 700 mb':'flow n/a'} · top: ${w.top.slice(0,3).map(x=>esc(x.l.short||x.l.name)+' '+inch(x.v)).join(', ')}</div></div>`).join('')||'<div class="win"><b>No storm windows</b><div class="r">Nothing reaches 0.15 in/hr at any selected location.</div></div>'}</div></div>`;
+  $$('#hero [data-goto]').forEach(a=>a.onclick=e=>{ e.preventDefault(); $(`nav.tabs button[data-tab=${a.dataset.goto}]`).click(); window.scrollTo({top:0}); });
   // best bets: rank by powder score within filter
   const bets=[...locs].sort((a,b)=>b.D.powder.total-a.D.powder.total).slice(0,4);
   $('#bets').innerHTML = bets.map((x,i)=>{ const D=x.D,l=x.l; const fl=fitLabel(D.fit7,D.flow7); const reasons=[]; if(D.d3>=4) reasons.push(`${inch(D.d3)} in in 72 h`); if(D.powder.slr3&&D.powder.slr3>=14) reasons.push(`light ${Math.round(D.powder.slr3)}:1 snow`); else if(D.powder.slr3&&D.powder.slr3<10) reasons.push(`dense ${Math.round(D.powder.slr3)}:1 snow`); if(D.powder.gust!=null) reasons.push(D.powder.gust<25?'calm winds':D.powder.gust<40?`gusts to ${f0(D.powder.gust)} mph`:`wind-hold risk, gusts ${f0(D.powder.gust)} mph`); if(D.fit7!=null&&D.fit7>=0.4) reasons.push('terrain lines up with the flow'); if(D.fit7!=null&&D.fit7<=-0.4) reasons.push('shadowed in this flow'); reasons.push(`${D.conf.t} agreement`);
@@ -143,15 +145,24 @@ const RANGES=[{n:'WASATCH',lat:41.0,lon:-111.62},{n:'UINTAS',lat:40.72,lon:-110.
 let mapTimer=null;
 function renderMapDays(){
   const D=state.derived[LOCATIONS[0].id]; if(!D) return;
-  const days=D.days;
-  $('#mapDays').innerHTML = `<button class="play" id="mapPlay" title="Animate day by day">${mapTimer?'■ Stop':'▶ Play'}</button><button aria-pressed="${state.mapDay==='all'}" data-d="all">7-day total</button>`+days.map(d=>`<button aria-pressed="${state.mapDay===d.d}" data-d="${d.d}">${d.label.split(',')[0]}</button>`).join('');
-  $$('#mapDays button[data-d]').forEach(b=>b.onclick=()=>{ stopMap(); state.mapDay = b.dataset.d==='all'?'all':+b.dataset.d; renderMapDays(); renderMap(); });
-  $('#mapPlay').onclick=()=>{ if(mapTimer){ stopMap(); renderMapDays(); return; } let k=0; const step=()=>{ state.mapDay=days[k%days.length].d; k++; renderMapDays(); renderMap(); }; step(); mapTimer=setInterval(step, 1100); renderMapDays(); };
+  const frs=frameList(); if(state.mapFrame>=frs.length) state.mapFrame=0;
+  const cur=frs[state.mapFrame];
+  let html=`<button class="play" id="mapPlay" title="Animate through the week">${mapTimer?'■ Stop':'▶ Play'}</button>`;
+  html+=`<button aria-pressed="${state.mapMode==='day'&&state.mapDay==='all'}" data-d="all">7-day total</button>`;
+  html+=`<button aria-pressed="${state.mapMode==='6h'}" data-mode="6h" title="Six-hour frames">6-hour frames</button>`;
+  if(state.mapMode==='day') html+=frs.map(d=>`<button aria-pressed="${state.mapDay===d.key}" data-d="${d.key}">${d.label.split(',')[0]}</button>`).join('');
+  else html+=`<div class="frameSlider"><input type="range" id="frameRange" min="0" max="${frs.length-1}" value="${state.mapFrame}" aria-label="Six-hour frame"><span class="lbl">${cur?cur.label:''}</span></div>`;
+  $('#mapDays').innerHTML=html;
+  $$('#mapDays button[data-d]').forEach(b=>b.onclick=()=>{ stopMap(); state.mapMode='day'; state.mapDay = b.dataset.d==='all'?'all':+b.dataset.d; state.mapFrame=Math.max(0,frs.findIndex(f=>f.key===state.mapDay)); renderMapDays(); renderMap(); });
+  const mb=$('#mapDays button[data-mode]'); if(mb) mb.onclick=()=>{ stopMap(); state.mapMode= state.mapMode==='6h'?'day':'6h'; state.mapFrame=0; if(state.mapMode==='day') state.mapDay='all'; renderMapDays(); renderMap(); };
+  const rg=$('#frameRange'); if(rg) rg.oninput=()=>{ stopMap(); state.mapFrame=+rg.value; const f=frameList()[state.mapFrame]; $('#mapDays .lbl').textContent=f.label; renderMap(); };
+  $('#mapPlay').onclick=()=>{ if(mapTimer){ stopMap(); renderMapDays(); return; } const list=frameList(); let k=state.mapMode==='day'?0:state.mapFrame; const step=()=>{ const f=list[k%list.length]; state.mapFrame=k%list.length; if(state.mapMode==='day') state.mapDay=f.key; k++; renderMapDays(); renderMap(); }; step(); mapTimer=setInterval(step, state.mapMode==='day'?1100:450); renderMapDays(); };
 }
 function stopMap(){ if(mapTimer){ clearInterval(mapTimer); mapTimer=null; } }
 function dayVal(D, dKey){ if(dKey==='all') return {snow:D.d7, flow:D.flow7, fit:D.fit7}; const d=D.days.find(x=>x.d===dKey); return d? {snow:d.blend, flow:d.flow, fit:d.fit} : {snow:0}; }
+function curFrame(){ const frs=frameList(); if(state.mapMode==='day') return state.mapDay==='all'? {key:'all',label:'7-day total'} : (frs.find(f=>f.key===state.mapDay)||{key:'all',label:'7-day total'}); return frs[Math.min(state.mapFrame, frs.length-1)]; }
 function renderMap(){
-  const vals=visRows().map(x=>Object.assign(x, dayVal(x.D,state.mapDay)));
+  const fr=curFrame(); const vals=visRows().map(x=>Object.assign(x, fr.key==='all'? dayVal(x.D,'all') : frameVal(x.D, fr)));
   const max=Math.max(2,...vals.map(v=>v.snow||0));
   const rect=(a,b,c,d)=>`M${px(a)},${py(b)}L${px(c)},${py(b)}L${px(c)},${py(d)}L${px(a)},${py(d)}Z`;
   const states = `<rect class="mapbg" x="0" y="0" width="${MAP.W}" height="${MAP.H}" rx="8"/>
@@ -173,9 +184,14 @@ function renderMap(){
     const tip = `<b>${esc(v.l.name)}</b> ${v.l.state}<br>${state.mapDay==='all'?'7-day':'day'} blended: <b>${inch(v.snow)} in</b>${v.flow?`<br>700 mb flow: ${degToCompass(v.flow.dir)} ${f0(v.flow.spd)} mph · ${fitLabel(v.fit,v.flow).t}`:''}<br><span class="muted">click for the why</span>`;
     return `<g class="loc" tabindex="0" data-id="${v.l.id}" data-tip="${esc(tip)}" style="cursor:pointer">${arrow}${heavy?`<circle cx="${x}" cy="${y}" r="${r+6}" fill="${col}" opacity=".25" filter="url(#glow)"/>`:''}<circle cx="${x}" cy="${y}" r="${r}" fill="${col==='transparent'?'var(--panel)':col}" stroke="var(--fg-2)" stroke-width="1" fill-opacity="${col==='transparent'?1:.9}"/>${(labelSet.has(v.l.id)&&(v.snow||0)>0.5)||v.l.pin?`<text x="${x}" y="${y-r-(v.flow?12:4)}" text-anchor="middle" font-size="10" font-weight="600" fill="var(--fg)" paint-order="stroke" stroke="var(--panel)" stroke-width="3">${esc(v.l.short||v.l.name)}</text>`:''}</g>`;
   }).join('');
-  const dayLabel = state.mapDay==='all'? '7-day total' : (vals[0]&&vals[0].D.days.find(d=>d.d===state.mapDay)||{}).label||'';
-  $('#map').innerHTML = `<svg viewBox="0 0 ${MAP.W} ${MAP.H}" role="img" aria-label="Map of forecast snowfall"><defs><filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6"/></filter></defs>${states}${roads}${ranges}${cities}${dots}<text x="${MAP.W-10}" y="22" text-anchor="end" font-family="var(--display)" font-size="20" font-weight="700" fill="var(--fg)">${esc(dayLabel)}</text></svg>`;
-  $('#mapLegend').innerHTML = `<span>Dot size and shade = blended snowfall (max ${inch(max)} in)</span><span><span class="sw" style="background:var(--seq2)"></span>light</span><span><span class="sw" style="background:var(--seq4)"></span>moderate</span><span><span class="sw" style="background:var(--seq7)"></span>heavy</span><span>→ arrow = where the 700 mb wind blows during precipitation (length = speed)</span><span><span class="ln" style="background:var(--road)"></span>interstates and highways</span>`;
+  const dayLabel = fr.label||'';
+  // storm track: the 500 mb low centre per frame, drawn as a path with the current frame highlighted
+  let trackSvg=''; const tr=stormTrack().filter(Boolean);
+  if(tr.length>1){ const pts=tr.map(x=>[px(x.l.lon),py(x.l.lat)]); trackSvg+=`<path d="M${pts.map(p=>p.join(',')).join('L')}" fill="none" stroke="var(--s7)" stroke-width="2" stroke-dasharray="5 4" opacity=".8"/>`;
+    const curIdx = fr.key==='all'? -1 : tr.findIndex(x=>x.fr.key===fr.key);
+    tr.forEach((x,k)=>{ const [X,Y]=pts[k]; const on=k===curIdx; trackSvg+=`<g data-tip="${esc(`<b>500 mb low centre</b><br>${x.fr.label}<br>lowest heights near ${x.l.name} (${f0(x.v)} m)`)}"><circle cx="${X}" cy="${Y}" r="${on?13:6}" fill="${on?'var(--s7)':'var(--panel)'}" stroke="var(--s7)" stroke-width="2"/><text x="${X}" y="${Y+(on?5:3.5)}" text-anchor="middle" font-size="${on?15:9}" font-weight="800" fill="${on?'#fff':'var(--s7)'}" font-family="var(--display)">L</text></g>`; }); }
+  $('#map').innerHTML = `<svg viewBox="0 0 ${MAP.W} ${MAP.H}" role="img" aria-label="Map of forecast snowfall"><defs><filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6"/></filter></defs>${states}${roads}${ranges}${cities}${trackSvg}${dots}<text x="${MAP.W-10}" y="22" text-anchor="end" font-family="var(--display)" font-size="20" font-weight="700" fill="var(--fg)">${esc(dayLabel)}</text></svg>`;
+  $('#mapLegend').innerHTML = `<span>Dot size and shade = blended snowfall (max ${inch(max)} in)</span><span><span class="sw" style="background:var(--seq2)"></span>light</span><span><span class="sw" style="background:var(--seq4)"></span>moderate</span><span><span class="sw" style="background:var(--seq7)"></span>heavy</span><span>→ arrow = where the 700 mb wind blows during precipitation (length = speed)</span><span><span class="ln" style="background:var(--road)"></span>interstates and highways</span><span><b style="color:var(--s7)">L</b> = 500 mb low centre each frame (the storm track); dashed line = its path through the week</span>`;
   bindTips($('#map'));
   $$('#map .loc').forEach(g=>{ g.onclick=()=>openDetail(g.dataset.id); g.onkeydown=e=>{ if(e.key==='Enter') openDetail(g.dataset.id); }; });
 }
@@ -258,8 +274,10 @@ async function openDetail(id){
       <div class="stat"><div class="label">Agreement</div><div class="value"><span class="pill ${D.conf.cls}" style="font-size:16px">${D.conf.t}</span></div></div>
       <div class="stat"><div class="label">Flow fit</div><div class="value"><span class="pill ${fitLabel(D.fit7,D.flow7).cls}" style="font-size:16px">${fitLabel(D.fit7,D.flow7).t}</span></div><div class="sub">${D.flow7?degToCompass(D.flow7.dir)+' '+f0(D.flow7.spd)+' mph at 700 mb':'—'}</div></div>
     </div>
-    <h2>Why this number</h2>
-    <div class="why" id="why">${whyText(l,D)}</div>
+    <h2>When to go</h2>
+    <div class="card" id="whenToGo"></div>
+    <h2 style="margin-top:16px">Why this number</h2>
+    <div class="why" id="why">${gloss(whyText(l,D))}</div>
     <div class="twocol" style="margin-top:16px">
       <div class="card"><h2>Daily snowfall by model</h2><div id="chDaily"></div><div class="legendRow" id="lgDaily"></div></div>
       <div class="card"><h2>Cumulative snowfall</h2><div id="chCum"></div><div class="legendRow" id="lgCum"></div><div style="margin-top:8px"><button class="btn sm" id="btnEns">Load ensembles (ECMWF 51 + GEFS 31 members)</button> <span class="small muted" id="ensNote"></span></div><div id="ensStats"></div></div>
@@ -274,10 +292,11 @@ async function openDetail(id){
       <div class="card"><h2>SNOTEL ground truth</h2><div id="snotel" class="small muted">${l.snotel?'Loading…':'No SNOTEL assigned.'}</div></div>
     </div>
     <div class="card" style="margin-top:16px"><h2>Forecaster's discussion — NWS ${l.nws}</h2><p class="small muted" style="margin:0 0 8px">The Area Forecast Discussion is where the human forecaster explains the reasoning, model preferences and confidence. Mountain-relevant words are highlighted.</p><div id="afd" class="small muted">Loading…</div></div>
+    <div class="card" style="margin-top:16px"><h2>Live cams</h2><div id="detailCams"></div></div>
     <div class="card" style="margin-top:16px"><h2>Every hour, every model</h2><details><summary>Open the full hourly table (${D.n-D.startIdx} hours)</summary><div id="nerd" style="overflow:auto;max-height:480px;margin-top:8px"></div></details></div>
     <div class="card" style="margin-top:16px"><h2>Go deeper</h2><div id="links"></div></div>`;
   $('#btnClose').onclick=closeDetail;
-  drawDaily(l,D); drawCum(l,D,null); drawHourly(l,D); drawDayTable(l,D); drawRose(l,D); drawLinks(l); drawNerd(l,D);
+  drawWhenToGo(l,D); drawDaily(l,D); drawCum(l,D,null); drawHourly(l,D); drawDayTable(l,D); drawRose(l,D); drawLinks(l); drawNerd(l,D); drawDetailCams(l); bindTips($('#why'));
   if(state.ens[l.id]){ drawCum(l,D,state.ens[l.id]); drawEnsStats(l,state.ens[l.id]); $('#btnEns').hidden=true; }
   $('#btnEns').onclick=async()=>{ $('#btnEns').disabled=true; $('#ensNote').textContent='Loading ~80 ensemble members…'; const e=await fetchEnsemble(l); drawCum(l,D,e); drawEnsStats(l,e); $('#ensNote').textContent=''; };
   fetchNwsGrid(l).then(g=>drawNws(l,g)); fetchSnotel(l).then(s=>drawSnotel(l,s)); fetchAFD(l.nws).then(a=>drawAfd(l,a));

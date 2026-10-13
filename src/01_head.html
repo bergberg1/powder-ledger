@@ -202,6 +202,29 @@ details summary{cursor:pointer;color:var(--accent-ink);font-weight:500}
 .nerd td.hot{background:color-mix(in srgb,var(--seq4) 22%,transparent);font-weight:600}
 .dim{opacity:.55}
 footer{color:var(--fg-3);font-size:12px;padding-block:20px}
+.camGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.cam{background:var(--panel-3);border:1px solid var(--line);border-radius:10px;overflow:hidden;min-width:0;display:flex;flex-direction:column}
+.cam .frame{position:relative;aspect-ratio:16/9;background:#0b1220;display:flex;align-items:center;justify-content:center;color:#9fb3cc;font-size:12px;overflow:hidden}
+.cam .frame img,.cam .frame iframe{width:100%;height:100%;object-fit:cover;border:0;display:block}
+.cam .frame .fallback{padding:14px;text-align:center}
+.cam .frame .fallback a{color:#cfe3ff}
+.cam .meta{padding:8px 10px;font-size:12px;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.cam .meta b{font-size:13px}
+.cam .meta .src{color:var(--fg-3);white-space:nowrap}
+.cam .live{position:absolute;top:8px;left:8px;background:rgba(208,59,59,.9);color:#fff;font-size:10px;font-weight:700;letter-spacing:.1em;padding:2px 6px;border-radius:3px}
+.cam .age{position:absolute;bottom:6px;right:8px;background:rgba(0,0,0,.55);color:#fff;font-size:10px;padding:2px 6px;border-radius:3px}
+.camFilters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.gl{border-bottom:1px dotted var(--fg-3);cursor:help}
+.goCard{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+.goCard .g{background:var(--panel-3);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.goCard .g .v{font-family:var(--display);font-size:24px;font-weight:700;line-height:1.1}
+.goCard .g .l{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--fg-3)}
+.goCard .g .s{font-size:12px;color:var(--fg-2);margin-top:4px}
+.frameSlider{display:flex;align-items:center;gap:8px;flex:1;min-width:200px}
+.frameSlider input{flex:1;accent-color:var(--accent)}
+.frameSlider .lbl{font-family:var(--display);font-size:15px;min-width:110px}
+.heroHelp{margin-top:10px;font-size:12px}
+.heroHelp a{color:var(--hero-fg);text-decoration:underline;text-underline-offset:3px}
 @media (prefers-reduced-motion:reduce){.dot.busy,.bet,.drawer,.btn{animation:none;transition:none}}
 </style>
 </head>
@@ -222,6 +245,7 @@ footer{color:var(--fg-3);font-size:12px;padding-block:20px}
     <button role="tab" aria-selected="true" data-tab="overview">Overview</button>
     <button role="tab" aria-selected="false" data-tab="storms">Storm timing</button>
     <button role="tab" aria-selected="false" data-tab="compare">Compare</button>
+    <button role="tab" aria-selected="false" data-tab="cams">Cams &amp; roads</button>
     <button role="tab" aria-selected="false" data-tab="sources">Data &amp; methods</button>
   </nav>
   <div class="filters" id="filters">
@@ -290,6 +314,18 @@ footer{color:var(--fg-3);font-size:12px;padding-block:20px}
     </div>
   </section>
 
+  <section id="tab-cams" role="tabpanel" hidden>
+    <div class="card">
+      <h2>Live cams: passes and canyons on the way</h2>
+      <p class="small muted" style="margin:0 0 10px">Still images refresh every 60 seconds; streams play live. A cam that will not load shows a link to its official page instead. Click any image to open the source.</p>
+      <div class="camFilters" id="camFilters"></div>
+      <div class="camGrid" id="camGridPasses"></div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <h2>Resort cams</h2>
+      <div class="camGrid" id="camGridResorts"></div>
+    </div>
+  </section>
   <section id="tab-sources" role="tabpanel" hidden>
     <div class="card sources" id="sources"></div>
   </section>
