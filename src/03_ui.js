@@ -186,10 +186,13 @@ function renderMap(){
   }).join('');
   const dayLabel = fr.label||'';
   // storm track: the 500 mb low centre per frame, drawn as a path with the current frame highlighted
-  let trackSvg=''; const tr=stormTrack().filter(Boolean);
-  if(tr.length>1){ const pts=tr.map(x=>[px(x.l.lon),py(x.l.lat)]); trackSvg+=`<path d="M${pts.map(p=>p.join(',')).join('L')}" fill="none" stroke="var(--s7)" stroke-width="2" stroke-dasharray="5 4" opacity=".8"/>`;
+  let trackSvg=''; const trAll=stormTrack().filter(Boolean); const tr=trAll.filter(x=>!x.none);
+  if(tr.length){ const pts=tr.map(x=>[px(x.lon),py(x.lat)]);
+    if(pts.length>1) trackSvg+=`<path d="M${pts.map(p=>p.join(',')).join('L')}" fill="none" stroke="var(--s7)" stroke-width="2" stroke-dasharray="5 4" opacity=".75"/>`;
     const curIdx = fr.key==='all'? -1 : tr.findIndex(x=>x.fr.key===fr.key);
-    tr.forEach((x,k)=>{ const [X,Y]=pts[k]; const on=k===curIdx; trackSvg+=`<g data-tip="${esc(`<b>500 mb low centre</b><br>${x.fr.label}<br>lowest heights near ${x.l.name} (${f0(x.v)} m)`)}"><circle cx="${X}" cy="${Y}" r="${on?13:6}" fill="${on?'var(--s7)':'var(--panel)'}" stroke="var(--s7)" stroke-width="2"/><text x="${X}" y="${Y+(on?5:3.5)}" text-anchor="middle" font-size="${on?15:9}" font-weight="800" fill="${on?'#fff':'var(--s7)'}" font-family="var(--display)">L</text></g>`; }); }
+    tr.forEach((x,k)=>{ const [X,Y]=pts[k]; const on=k===curIdx; trackSvg+=`<g data-tip="${esc(`<b>500 mb low centre</b><br>${x.fr.label}<br>lowest heights near ${x.l.name} (${f0(x.v)} m); ${f0(x.spread)} m gradient across the region`)}"><circle cx="${X}" cy="${Y}" r="${on?14:6}" fill="${on?'var(--s7)':'var(--panel)'}" stroke="var(--s7)" stroke-width="2"/><text x="${X}" y="${Y+(on?5.5:3.5)}" text-anchor="middle" font-size="${on?16:9}" font-weight="800" fill="${on?'#fff':'var(--s7)'}" font-family="var(--display)">L</text></g>`; }); }
+  const curNone = fr.key!=='all' && trAll.find(x=>x.fr.key===fr.key && x.none);
+  if(curNone) trackSvg+=`<text x="${MAP.W-10}" y="42" text-anchor="end" font-size="11" fill="var(--fg-3)">flat upper-air pattern this frame: no defined low</text>`;
   $('#map').innerHTML = `<svg viewBox="0 0 ${MAP.W} ${MAP.H}" role="img" aria-label="Map of forecast snowfall"><defs><filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6"/></filter></defs>${states}${roads}${ranges}${cities}${trackSvg}${dots}<text x="${MAP.W-10}" y="22" text-anchor="end" font-family="var(--display)" font-size="20" font-weight="700" fill="var(--fg)">${esc(dayLabel)}</text></svg>`;
   $('#mapLegend').innerHTML = `<span>Dot size and shade = blended snowfall (max ${inch(max)} in)</span><span><span class="sw" style="background:var(--seq2)"></span>light</span><span><span class="sw" style="background:var(--seq4)"></span>moderate</span><span><span class="sw" style="background:var(--seq7)"></span>heavy</span><span>→ arrow = where the 700 mb wind blows during precipitation (length = speed)</span><span><span class="ln" style="background:var(--road)"></span>interstates and highways</span><span><b style="color:var(--s7)">L</b> = 500 mb low centre each frame (the storm track); dashed line = its path through the week</span>`;
   bindTips($('#map'));

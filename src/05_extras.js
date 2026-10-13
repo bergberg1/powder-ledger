@@ -12,10 +12,14 @@ function frameVal(D, fr){
 function stormTrack(){
   const frs=frameList(); const locs=LOCATIONS.map(l=>({l,D:state.derived[l.id]})).filter(x=>x.D&&x.D.pres&&x.D.pres.h.geopotential_height_500hPa);
   if(!locs.length) return [];
-  return frs.map(fr=>{ let best=null; locs.forEach(x=>{ let v=null; if(state.mapMode==='day'){ const d=x.D.days.find(q=>q.d===fr.key); v=d?d.h500:null; } else { const p=x.D.pres; const vals=[]; for(let i=fr.a;i<fr.b;i++){ const j=p.map.get(x.D.times[i]); if(j!=null&&p.h.geopotential_height_500hPa[j]!=null) vals.push(p.h.geopotential_height_500hPa[j]); } v=vals.length?mean(vals):null; } if(v!=null&&(!best||v<best.v)) best={v, l:x.l}; });
-    // also the mean height for context: low centre only matters if it is well below the regional mean
-    let all=[]; locs.forEach(x=>{ if(state.mapMode==='day'){ const d=x.D.days.find(q=>q.d===fr.key); if(d&&d.h500!=null) all.push(d.h500); } }); const spread = all.length? Math.max(...all)-Math.min(...all) : null;
-    return best? {fr, l:best.l, v:best.v, spread} : null; });
+  return frs.map(fr=>{ const vals=[]; locs.forEach(x=>{ let v=null; if(state.mapMode==='day'){ const d=x.D.days.find(q=>q.d===fr.key); v=d?d.h500:null; } else { const p=x.D.pres; const hv=[]; for(let i=fr.a;i<fr.b;i++){ const j=p.map.get(x.D.times[i]); if(j!=null&&p.h.geopotential_height_500hPa[j]!=null) hv.push(p.h.geopotential_height_500hPa[j]); } v=hv.length?mean(hv):null; } if(v!=null) vals.push({v,l:x.l}); });
+    if(vals.length<5) return null; vals.sort((a,b)=>a.v-b.v); const spread=vals[vals.length-1].v-vals[0].v;
+    // a closed low or sharp trough shows as a big height gradient across the region; a flat field (small spread) has no meaningful centre
+    if(spread<45) return {fr, none:true, spread};
+    // centre = height-weighted position of the lowest five points, which is steadier than a single minimum
+    const low=vals.slice(0,5); const w=low.map(x=>(spread-(x.v-vals[0].v))+1); const W=w.reduce((a,b)=>a+b,0);
+    const lat=low.reduce((a,x,k)=>a+x.l.lat*w[k],0)/W, lon=low.reduce((a,x,k)=>a+x.l.lon*w[k],0)/W;
+    return {fr, lat, lon, l:vals[0].l, v:vals[0].v, spread}; });
 }
 /* ---------- When to go ---------- */
 function whenToGo(l, D){
