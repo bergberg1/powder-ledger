@@ -91,17 +91,17 @@ function renderCamMap(){
   $$('#camMap .camDot').forEach(g=>g.onclick=()=>openLightbox(+g.dataset.i));
 }
 /* lightbox */
-function openLightbox(i){ const c=camRegistry[i]; if(!c||c.kind==='link') return; lbIdx=i; const lb=$('#lightbox'); lb.hidden=false; document.body.style.overflow='hidden';
+function openLightbox(i){ const c=camRegistry[i]; if(!c||c.kind==='link') return; lbIdx=i; const lb=$('#lightbox'); lb.hidden=false; lb.style.display='flex'; document.body.style.overflow='hidden';
   $('#lbTitle').textContent=c.name; const fr=$('#lbFrame'); if(lbRefresh) clearInterval(lbRefresh);
   if(c.kind==='img'){ fr.innerHTML=`<img alt="${esc(c.name)}" referrerpolicy="no-referrer">`; const im=fr.querySelector('img'); const load=()=>{ im.src=c.url+(c.url.includes('?')?'&':'?')+'t='+Date.now(); }; load(); lbRefresh=setInterval(load,15000); }
   else if(c.kind==='youtube') fr.innerHTML=`<iframe src="https://www.youtube.com/embed/${esc(c.id)}?autoplay=1&mute=1&rel=0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
   else fr.innerHTML=`<iframe src="${esc(c.url)}" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
   const ids=c.near||c._loc||[]; const l=ids.map(id=>LOCATIONS.find(x=>x.id===id)).find(Boolean); const D=l&&state.derived[l.id];
   $('#lbFoot').innerHTML=`<span>${esc(c.sub||'')} · <a href="${esc(c.page||c.url)}" target="_blank" rel="noopener" style="color:#9fd0ff">${esc(c.provider||'source')} ↗</a></span><span>${D?`${esc(l.name)}: <b style="color:#fff">${inch(D.d1)} in</b> next 24 h · ${inch(D.d7)} in this week · ${D.conf.t} agreement`:''}</span>`; }
-function closeLightbox(){ $('#lightbox').hidden=true; document.body.style.overflow=''; if(lbRefresh) clearInterval(lbRefresh); setAuto(false); $('#lbFrame').innerHTML=''; }
+function closeLightbox(){ $('#lightbox').hidden=true; $('#lightbox').style.display='none'; document.body.style.overflow=''; if(lbRefresh) clearInterval(lbRefresh); setAuto(false); $('#lbFrame').innerHTML=''; }
 function stepLightbox(d){ if(lbIdx<0) return; let i=lbIdx; for(let k=0;k<camRegistry.length;k++){ i=(i+d+camRegistry.length)%camRegistry.length; if(camRegistry[i].kind!=='link' && (camRegistry[i].kind!=='img' || camRegistry[i]._ok!==false)) break; } openLightbox(i); }
 function setAuto(on){ lbAuto=on; if(lbTimer) clearInterval(lbTimer); lbTimer=null; if(on) lbTimer=setInterval(()=>stepLightbox(1), 8000); const b=$('#lbAuto'); if(b) b.textContent= on? '■ Stop auto-advance' : 'Auto-advance'; }
-document.addEventListener('DOMContentLoaded', ()=>{ $('#lbClose').onclick=closeLightbox; $('#lbPrev').onclick=()=>stepLightbox(-1); $('#lbNext').onclick=()=>stepLightbox(1); $('#lbAuto').onclick=()=>setAuto(!lbAuto); $('#lightbox').addEventListener('click',e=>{ if(e.target.id==='lightbox') closeLightbox(); });
+document.addEventListener('DOMContentLoaded', ()=>{ const lb0=$('#lightbox'); lb0.hidden=true; lb0.style.display='none'; $('#lbClose').onclick=closeLightbox; $('#lbPrev').onclick=()=>stepLightbox(-1); $('#lbNext').onclick=()=>stepLightbox(1); $('#lbAuto').onclick=()=>setAuto(!lbAuto); $('#lightbox').addEventListener('click',e=>{ if(e.target.id==='lightbox') closeLightbox(); });
   document.addEventListener('keydown',e=>{ if($('#lightbox').hidden) return; if(e.key==='Escape') closeLightbox(); if(e.key==='ArrowRight') stepLightbox(1); if(e.key==='ArrowLeft') stepLightbox(-1); }); });
 function drawDetailCams(l){
   const el=$('#detailCams'); if(!el) return; if(!camRegistry.length) buildRegistry();
