@@ -295,7 +295,7 @@ async function openDetail(id){
       <div class="card"><h2>SNOTEL ground truth</h2><div id="snotel" class="small muted">${l.snotel?'Loading…':'No SNOTEL assigned.'}</div></div>
     </div>
     <div class="card" style="margin-top:16px"><h2>Forecaster's discussion — NWS ${l.nws}</h2><p class="small muted" style="margin:0 0 8px">The Area Forecast Discussion is where the human forecaster explains the reasoning, model preferences and confidence. Mountain-relevant words are highlighted.</p><div id="afd" class="small muted">Loading…</div></div>
-    <div class="card" style="margin-top:16px"><h2>Live cams</h2><div id="detailCams"></div></div>
+    <div class="card" style="margin-top:16px"><h2>Live cams</h2><p class="small muted" style="margin:0 0 8px">Resort cams plus the road cams on the way. Click a frame to enlarge; stills refresh every minute.</p><div id="detailCams"></div></div>
     <div class="card" style="margin-top:16px"><h2>Every hour, every model</h2><details><summary>Open the full hourly table (${D.n-D.startIdx} hours)</summary><div id="nerd" style="overflow:auto;max-height:480px;margin-top:8px"></div></details></div>
     <div class="card" style="margin-top:16px"><h2>Go deeper</h2><div id="links"></div></div>`;
   $('#btnClose').onclick=closeDetail;

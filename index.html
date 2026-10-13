@@ -202,6 +202,51 @@ details summary{cursor:pointer;color:var(--accent-ink);font-weight:500}
 .nerd td.hot{background:color-mix(in srgb,var(--seq4) 22%,transparent);font-weight:600}
 .dim{opacity:.55}
 footer{color:var(--fg-3);font-size:12px;padding-block:20px}
+/* cam wall: a deliberately dark control-room surface in both themes */
+.wall{--wbg:#070b12;--wpanel:#0f1623;--wline:#1f2a3b;--wfg:#e6eef8;--wfg2:#9fb0c6;--wfg3:#6b7c93;--waccent:#5aa2ff;background:var(--wbg);color:var(--wfg);border-radius:14px;padding:16px;border:1px solid var(--wline);box-shadow:var(--shadow-sm);color-scheme:dark}
+.wallHead{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.wallTitle{font-family:var(--display);font-size:22px;font-weight:800;letter-spacing:.08em;display:flex;align-items:center;gap:10px}
+.wallSub{font-family:var(--body);font-size:12px;font-weight:400;letter-spacing:0;color:var(--wfg2);text-transform:none}
+.rec{width:10px;height:10px;border-radius:50%;background:#ff3b3b;box-shadow:0 0 0 0 rgba(255,59,59,.6);animation:rec 1.6s infinite}
+@keyframes rec{0%{box-shadow:0 0 0 0 rgba(255,59,59,.6)}70%{box-shadow:0 0 0 9px rgba(255,59,59,0)}100%{box-shadow:0 0 0 0 rgba(255,59,59,0)}}
+.wallStats{display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:12px;color:var(--wfg2)}
+.wallStats .mono{font-size:16px;color:var(--wfg)}
+.wallBtn{background:var(--waccent);border-color:var(--waccent);color:#06101f;font-weight:700}
+.wallH{font-family:var(--display);font-size:15px;letter-spacing:.1em;text-transform:uppercase;color:var(--wfg2);margin:6px 0 8px}
+.wallNote{font-size:12px;color:var(--wfg3);margin:14px 0 0}
+.routeBar{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 10px}
+.routeBar .chip{background:var(--wpanel);border-color:var(--wline);color:var(--wfg2)}
+.routeBar .chip[aria-pressed="true"]{background:#17304f;border-color:var(--waccent);color:#cfe3ff}
+.strip{}
+.routeStrip{background:var(--wpanel);border:1px solid var(--wline);border-radius:12px;padding:12px;margin-bottom:14px}
+.routeStrip .rsHead{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline;margin-bottom:8px}
+.routeStrip .rsHead b{font-family:var(--display);font-size:20px;letter-spacing:.03em}
+.routeStrip .road{display:flex;gap:10px;overflow-x:auto;padding:6px 2px 10px;scroll-snap-type:x proximity}
+.routeStrip .stop{flex:0 0 240px;scroll-snap-align:start;position:relative}
+.routeStrip .stop .mile{font-family:var(--mono);font-size:11px;color:var(--wfg3);margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.routeStrip .stop .mile i{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--waccent)}
+.routeStrip .stop.dest .mile i{background:#2dd4a0}
+.routeStrip .road::before{content:"";position:absolute}
+.wallGrid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr);gap:16px}
+@media (max-width:1000px){.wallGrid2{grid-template-columns:1fr}}
+.camMap svg{width:100%;height:auto;display:block;background:#0b1220;border-radius:10px;border:1px solid var(--wline)}
+.wall .camGrid{grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+.wall .cam{background:var(--wpanel);border-color:var(--wline);transition:transform .15s,box-shadow .15s}
+.wall .cam:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(0,0,0,.5);border-color:#2f4059}
+.wall .cam .frame{background:#05080f;cursor:zoom-in}
+.wall .cam .meta{color:var(--wfg)} .wall .cam .meta .muted{color:var(--wfg3)} .wall .cam .meta .src{color:var(--wfg2)}
+.wall .camFilters .chip{background:var(--wpanel);border-color:var(--wline);color:var(--wfg2)} .wall .camFilters .chip[aria-pressed="true"]{background:#17304f;border-color:var(--waccent);color:#cfe3ff}
+.cam .fc{position:absolute;top:8px;right:8px;background:rgba(10,18,32,.8);color:#dbe6f3;font-size:11px;padding:2px 7px;border-radius:4px;border:1px solid rgba(255,255,255,.12)}
+.cam .fc b{color:#9fd0ff}
+.cam .frame.dark::after{content:"night";position:absolute;left:8px;bottom:6px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#7f8fa6}
+.lightbox{position:fixed;inset:0;background:rgba(3,6,12,.92);z-index:60;display:flex;align-items:center;justify-content:center;padding:16px}
+.lbInner{width:min(1200px,100%);color:#e6eef8}
+.lbHead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px;font-family:var(--display);font-size:20px}
+.lbCtl{display:flex;gap:6px} .lbCtl .btn{background:#0f1623;border-color:#2a3850;color:#e6eef8}
+.lbFrame{aspect-ratio:16/9;background:#000;border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.lbFrame img,.lbFrame iframe{width:100%;height:100%;object-fit:contain;border:0}
+.lbFoot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:13px;color:#9fb0c6;margin-top:8px}
+@media (prefers-reduced-motion:reduce){.rec{animation:none}}
 .camGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
 .cam{background:var(--panel-3);border:1px solid var(--line);border-radius:10px;overflow:hidden;min-width:0;display:flex;flex-direction:column}
 .cam .frame{position:relative;aspect-ratio:16/9;background:#0b1220;display:flex;align-items:center;justify-content:center;color:#9fb3cc;font-size:12px;overflow:hidden}
@@ -315,16 +360,22 @@ footer{color:var(--fg-3);font-size:12px;padding-block:20px}
   </section>
 
   <section id="tab-cams" role="tabpanel" hidden>
-    <div class="card">
-      <h2>Live cams: passes and canyons on the way</h2>
-      <p class="small muted" style="margin:0 0 10px">Still images refresh every 60 seconds; streams play live. A cam that will not load shows a link to its official page instead. Click any image to open the source.</p>
-      <div class="camFilters" id="camFilters"></div>
-      <div class="camGrid" id="camGridPasses"></div>
-    </div>
-    <div class="card" style="margin-top:16px">
-      <h2>Resort cams</h2>
+    <div class="wall">
+      <div class="wallHead">
+        <div class="wallTitle"><span class="rec"></span>CAM WALL <span class="wallSub">passes, canyons and resorts, live</span></div>
+        <div class="wallStats"><span id="wallClock" class="mono"></span><span id="wallSun"></span><span id="wallOnline"></span><button class="btn sm wallBtn" id="btnWall">▶ Wall mode</button></div>
+      </div>
+      <div class="routeBar" id="routeBar"></div>
+      <div id="routeStrip"></div>
+      <div class="wallGrid2">
+        <div><div class="wallH">Cam map <span class="wallSub">click a dot</span></div><div id="camMap" class="camMap"></div></div>
+        <div><div class="wallH">Passes and canyons</div><div class="camFilters" id="camFilters"></div><div class="camGrid" id="camGridPasses"></div></div>
+      </div>
+      <div class="wallH" style="margin-top:18px">Resort cams <span class="wallSub">summits, bases and snow stakes</span></div>
       <div class="camGrid" id="camGridResorts"></div>
+      <p class="wallNote">Still images refresh every 60 seconds; streams play live. Sources: Colorado DOT (COtrip), Utah DOT, and each resort. A feed that will not load falls back to a link to its official page. Night frames are dark; daylight status is shown above.</p>
     </div>
+    <div class="lightbox" id="lightbox" hidden><div class="lbInner"><div class="lbHead"><div id="lbTitle"></div><div class="lbCtl"><button class="btn sm" id="lbPrev">◀</button><button class="btn sm" id="lbNext">▶</button><button class="btn sm" id="lbAuto">Auto-advance</button><button class="btn sm" id="lbClose">✕</button></div></div><div class="lbFrame" id="lbFrame"></div><div class="lbFoot" id="lbFoot"></div></div></div>
   </section>
   <section id="tab-sources" role="tabpanel" hidden>
     <div class="card sources" id="sources"></div>
@@ -1196,7 +1247,7 @@ async function openDetail(id){
       <div class="card"><h2>SNOTEL ground truth</h2><div id="snotel" class="small muted">${l.snotel?'Loading…':'No SNOTEL assigned.'}</div></div>
     </div>
     <div class="card" style="margin-top:16px"><h2>Forecaster's discussion — NWS ${l.nws}</h2><p class="small muted" style="margin:0 0 8px">The Area Forecast Discussion is where the human forecaster explains the reasoning, model preferences and confidence. Mountain-relevant words are highlighted.</p><div id="afd" class="small muted">Loading…</div></div>
-    <div class="card" style="margin-top:16px"><h2>Live cams</h2><div id="detailCams"></div></div>
+    <div class="card" style="margin-top:16px"><h2>Live cams</h2><p class="small muted" style="margin:0 0 8px">Resort cams plus the road cams on the way. Click a frame to enlarge; stills refresh every minute.</p><div id="detailCams"></div></div>
     <div class="card" style="margin-top:16px"><h2>Every hour, every model</h2><details><summary>Open the full hourly table (${D.n-D.startIdx} hours)</summary><div id="nerd" style="overflow:auto;max-height:480px;margin-top:8px"></div></details></div>
     <div class="card" style="margin-top:16px"><h2>Go deeper</h2><div id="links"></div></div>`;
   $('#btnClose').onclick=closeDetail;
@@ -1462,48 +1513,116 @@ const GLOSS = [
   [/cutoff low/gi, 'A storm that has pinched off from the jet stream and spins in place, often over the Four Corners. Slow-moving, warm, and hard for models to time.'],
 ];
 function gloss(html){ let out=html; GLOSS.forEach(([re,tip])=>{ let done=false; out=out.replace(re, m=> done? m : (done=true, `<span class="gl" data-tip="${esc(tip)}">${m}</span>`)); }); return out; }
-/* ---------- Cams ---------- */
+/* ===================== Cam wall ===================== */
 const CAMS = window.CAMS || {passes:[], resorts:{}};
-CAMS.passes.forEach(c=>{ if(c.kind==='img'&&c.verified===false) c.sub=(c.sub?c.sub+' · ':'')+'feed URL untested, falls back to the official page'; });
-function camCard(c){
-  const id='cam'+Math.random().toString(36).slice(2,8); const isImg=c.kind==='img';
-  const frame = isImg? `<a href="${esc(c.page||c.url)}" target="_blank" rel="noopener"><img id="${id}" alt="${esc(c.name)}" loading="lazy" referrerpolicy="no-referrer"></a><span class="age" id="${id}-age"></span>`
+// Approximate camera coordinates (for the cam map), matched by name fragment
+const CAM_COORDS = [
+  ['Eisenhower Tunnel west',39.679,-105.930],['Eisenhower Tunnel east',39.680,-105.898],['Loveland Pass (US-6)',39.665,-105.885],['Vail Pass summit',39.531,-106.218],['Vail Pass west',39.545,-106.235],
+  ['Copper Mountain / CO-91',39.504,-106.146],['Silverthorne',39.630,-106.070],['Georgetown',39.706,-105.699],['Floyd Hill',39.731,-105.405],['Idaho Springs',39.740,-105.470],['Vail (Vail Rd)',39.643,-106.378],
+  ['No Name',39.565,-107.270],['Grizzly Creek',39.562,-107.240],['Berthoud Pass',39.798,-105.777],['Berthoud Falls',39.831,-105.806],['Mary Jane',39.885,-105.765],['US-285 at Grant',39.460,-105.670],
+  ['Rabbit Ears',40.385,-106.616],['Monarch Pass',38.497,-106.325],['Fremont Pass',39.370,-106.195],['Independence Pass',39.108,-106.564],['Wolf Creek Pass, east',37.470,-106.760],['Wolf Creek Pass, west',37.483,-106.830],
+  ['Red Mountain Pass',37.898,-107.712],['Silverton (US-550)',37.812,-107.665],['Little Cottonwood: mouth',40.573,-111.800],['Seven Turns',40.571,-111.740],['White Pine',40.575,-111.690],['Alta Bypass',40.580,-111.655],['Alta MP 12',40.588,-111.636],
+  ['Big Cottonwood: mouth',40.620,-111.790],['S-curves',40.635,-111.700],['Silver Fork',40.627,-111.610],['Big Cottonwood: Solitude',40.620,-111.592],['Big Cottonwood: Brighton',40.598,-111.583],['Cottonwood Canyons road status',40.600,-111.700],
+  ['Parleys Summit eastbound',40.757,-111.612],['Parleys Summit westbound',40.757,-111.606],['Kimball Junction',40.722,-111.540],['SR-224',40.710,-111.555],['Ogden Canyon (SR-39)',41.235,-111.900],['SR-158',41.262,-111.770],['Trappers Loop',41.200,-111.840],['Snowbasin Rd',41.215,-111.855],
+  ['Logan Summit',41.930,-111.520],['Provo Canyon',40.355,-111.600],['SR-92',40.395,-111.585],['Brian Head (SR-143',37.700,-112.840],['SR-143 below',37.650,-112.900],['I-80 Summit',41.260,-105.430],
+];
+function camCoord(c){ if(c.lat!=null) return [c.lat,c.lon]; const hit=CAM_COORDS.find(x=>c.name.includes(x[0])); return hit? [hit[1],hit[2]] : null; }
+// Drive routes: ordered cam-name fragments with approximate miles from the start city, plus destination locations
+const ROUTES = [
+  {id:'summit', name:'Denver → Summit County', from:'Denver', stops:[['Floyd Hill',35],['Idaho Springs',40],['Georgetown',47],['Eisenhower Tunnel east',60],['Eisenhower Tunnel west',61],['Loveland Pass (US-6)',62],['Silverthorne',70],['Copper Mountain / CO-91',78]], dest:['loveland','abasin','keystone','breck','copper']},
+  {id:'vail', name:'Denver → Vail / Beaver Creek', from:'Denver', stops:[['Floyd Hill',35],['Georgetown',47],['Eisenhower Tunnel west',61],['Silverthorne',70],['Copper Mountain / CO-91',78],['Vail Pass summit',90],['Vail Pass west',93],['Vail (Vail Rd)',100]], dest:['vail','beavercreek']},
+  {id:'aspen', name:'Denver → Glenwood / Aspen', from:'Denver', stops:[['Eisenhower Tunnel west',61],['Vail Pass summit',90],['Vail (Vail Rd)',100],['Grizzly Creek',150],['No Name',155],['Independence Pass',200]], dest:['sunlight','aspen','highlands','snowmass']},
+  {id:'wp', name:'Denver → Winter Park', from:'Denver', stops:[['Floyd Hill',35],['Idaho Springs',40],['Berthoud Falls',55],['Berthoud Pass',60],['Mary Jane',66]], dest:['winterpark','berthoud','eldora']},
+  {id:'steamboat', name:'Denver → Steamboat', from:'Denver', stops:[['Georgetown',47],['Eisenhower Tunnel west',61],['Silverthorne',70],['Rabbit Ears',140]], dest:['steamboat','rabbitears']},
+  {id:'central', name:'Denver → Monarch / Crested Butte', from:'Denver', stops:[['US-285 at Grant',55],['Fremont Pass',110],['Monarch Pass',160]], dest:['monarch','crestedbutte','cooper']},
+  {id:'wolf', name:'Denver → Wolf Creek', from:'Denver', stops:[['US-285 at Grant',55],['Wolf Creek Pass, east',250],['Wolf Creek Pass, west',255]], dest:['wolfcreek','wolfcreekpass']},
+  {id:'sanjuan', name:'Durango → Silverton / Telluride', from:'Durango', stops:[['Silverton (US-550)',48],['Red Mountain Pass',60]], dest:['purgatory','silverton','redmtnpass','telluride']},
+  {id:'lcc', name:'SLC → Little Cottonwood', from:'Salt Lake City', stops:[['Little Cottonwood: mouth',18],['Seven Turns',21],['White Pine',23],['Alta Bypass',25],['Alta MP 12',26]], dest:['snowbird','alta']},
+  {id:'bcc', name:'SLC → Big Cottonwood', from:'Salt Lake City', stops:[['Big Cottonwood: mouth',17],['S-curves',22],['Silver Fork',29],['Big Cottonwood: Solitude',30],['Big Cottonwood: Brighton',32]], dest:['solitude','brighton']},
+  {id:'pc', name:'SLC → Park City', from:'Salt Lake City', stops:[['Parleys Summit eastbound',18],['Parleys Summit westbound',18],['Kimball Junction',27],['SR-224',30]], dest:['parkcity','deervalley']},
+  {id:'ogden', name:'SLC → Snowbasin / Powder Mountain', from:'Salt Lake City', stops:[['Trappers Loop',45],['Snowbasin Rd',48],['Ogden Canyon (SR-39)',45],['SR-158',52]], dest:['snowbasin','powdermtn','nordic']},
+  {id:'sundance', name:'Provo → Sundance', from:'Provo', stops:[['Provo Canyon',8],['SR-92',12]], dest:['sundance']},
+  {id:'brianhead', name:'I-15 → Brian Head', from:'Parowan', stops:[['SR-143 below',8],['Brian Head (SR-143',12]], dest:['brianhead']},
+];
+const camTimers=[]; let camRegistry=[]; let lbIdx=-1, lbTimer=null, lbAuto=false, lbRefresh=null, wallClockTimer=null;
+function fcBadge(ids){ for(const id of ids||[]){ const D=state.derived[id]; if(D){ const l=LOCATIONS.find(x=>x.id===id); return `<span class="fc">${esc(l.short||l.name)} <b>${inch(D.d1)}"</b> next 24 h</span>`; } } return ''; }
+function camCard(c, idx){
+  const isImg=c.kind==='img';
+  const frame = isImg? `<img alt="${esc(c.name)}" loading="lazy" referrerpolicy="no-referrer"><span class="age"></span>`
     : c.kind==='youtube'? `<iframe src="https://www.youtube.com/embed/${esc(c.id)}?autoplay=0&mute=1&rel=0" title="${esc(c.name)}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen loading="lazy"></iframe><span class="live">LIVE</span>`
-    : c.kind==='iframe'? `<iframe src="${esc(c.url)}" title="${esc(c.name)}" loading="lazy" allowfullscreen></iframe>`
-    : `<div class="fallback"><a href="${esc(c.page)}" target="_blank" rel="noopener">${esc(c.name)} ↗</a><br><span class="muted">opens the official cam page</span></div>`;
-  return `<div class="cam" data-region="${esc(c.region||'')}"><div class="frame">${frame}</div><div class="meta"><div><b>${esc(c.name)}</b><div class="muted">${esc(c.sub||'')}</div></div><a class="src" href="${esc(c.page||c.url||'#')}" target="_blank" rel="noopener">${esc(c.provider||'source')} ↗</a></div></div>`;
+    : c.kind==='iframe'? `<iframe src="${esc(c.url)}" title="${esc(c.name)}" loading="lazy" allowfullscreen allow="autoplay; encrypted-media"></iframe><span class="live">LIVE</span>`
+    : `<div class="fallback"><a href="${esc(c.page)}" target="_blank" rel="noopener">${esc(c.name)} ↗</a><br><span class="muted">${esc(c.sub||'opens the official cam page')}</span></div>`;
+  return `<div class="cam" data-idx="${idx}" data-region="${esc(c.region||'')}"><div class="frame">${frame}${fcBadge(c.near||c._loc)}</div><div class="meta"><div><b>${esc(c.name)}</b><div class="muted">${esc(c.sub||'')}</div></div><a class="src" href="${esc(c.page||c.url||'#')}" target="_blank" rel="noopener">${esc(c.provider||'source')} ↗</a></div></div>`;
 }
-const camTimers=[];
-function renderCams(){
-  const passes=CAMS.passes||[]; const regions=[...new Set(passes.map(c=>c.region).filter(Boolean))];
-  state.camRegion = state.camRegion||'';
-  $('#camFilters').innerHTML = `<button class="chip" aria-pressed="${!state.camRegion}" data-r="">All</button>`+regions.map(r=>`<button class="chip" aria-pressed="${state.camRegion===r}" data-r="${esc(r)}">${esc(r)}</button>`).join('');
-  $$('#camFilters .chip').forEach(b=>b.onclick=()=>{ state.camRegion=b.dataset.r; renderCams(); });
-  const shown=passes.filter(c=>!state.camRegion||c.region===state.camRegion);
-  $('#camGridPasses').innerHTML = shown.length? shown.map(camCard).join('') : '<p class="muted">No pass cams configured yet.</p>';
-  const res=Object.entries(CAMS.resorts||{}).flatMap(([id,list])=>{ const l=LOCATIONS.find(x=>x.id===id); return (list||[]).map(c=>Object.assign({sub:l?l.name+' · '+l.state:''}, c)); });
-  $('#camGridResorts').innerHTML = res.length? res.map(camCard).join('') : '<p class="muted">No resort cams configured yet.</p>';
-}
-// images: load with cache-busting, refresh every 60 s, fall back to a link on error
-function mountCamImages(root, cams){
-  const cards=[...root.querySelectorAll('.cam')]; cards.forEach((card,k)=>{ const c=cams[k]; const img=card.querySelector('img'); if(!img||!c||c.kind!=='img') return;
-    const load=()=>{ const u=c.url+(c.url.includes('?')?'&':'?')+'t='+Date.now(); img.src=u; const age=card.querySelector('.age'); if(age) age.textContent='updated '+new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}); };
-    img.onerror=()=>{ card.querySelector('.frame').innerHTML=`<div class="fallback"><a href="${esc(c.page||c.url)}" target="_blank" rel="noopener">${esc(c.name)} ↗</a><br><span class="muted">this feed blocks embedding; opens the official page</span></div>`; };
+function mountCams(root){
+  root.querySelectorAll('.cam').forEach(card=>{ const c=camRegistry[+card.dataset.idx]; if(!c) return; const img=card.querySelector('img'); const frame=card.querySelector('.frame');
+    if(c.kind!=='link') frame.addEventListener('click', e=>{ if(e.target.closest('a')) return; openLightbox(+card.dataset.idx); });
+    if(!img||c.kind!=='img') return;
+    const load=()=>{ img.src=c.url+(c.url.includes('?')?'&':'?')+'t='+Date.now(); };
+    img.onload=()=>{ const age=card.querySelector('.age'); if(age) age.textContent='updated '+new Date().toLocaleTimeString('en-US',{timeZone:TZ,hour:'numeric',minute:'2-digit'})+' MT'; c._ok=true; updateOnline(); try{ frame.classList.toggle('dark', isDarkImage(img)); }catch(e){} };
+    img.onerror=()=>{ c._ok=false; frame.innerHTML=`<div class="fallback"><a href="${esc(c.page||c.url)}" target="_blank" rel="noopener">${esc(c.name)} ↗</a><br><span class="muted">feed did not load; opens the official page</span></div>`; updateOnline(); };
     load(); camTimers.push(setInterval(load, (c.refresh||60)*1000)); });
 }
+function isDarkImage(img){ const cv=document.createElement('canvas'); cv.width=16; cv.height=9; const ctx=cv.getContext('2d'); ctx.drawImage(img,0,0,16,9); const d=ctx.getImageData(0,0,16,9).data; let s=0; for(let i=0;i<d.length;i+=4) s+=d[i]+d[i+1]+d[i+2]; return s/(d.length/4*3) < 28; }
+function updateOnline(){ const imgs=camRegistry.filter(c=>c.kind==='img'); const ok=imgs.filter(c=>c._ok).length; const streams=camRegistry.filter(c=>c.kind==='youtube'||c.kind==='iframe').length; const el=$('#wallOnline'); if(el) el.textContent=`${ok}/${imgs.length} stills online · ${streams} streams`; }
+// Sunrise/sunset for Denver (approximate NOAA method)
+function sunTimes(lat, lon, date){ const rad=Math.PI/180; const d=date||new Date(); const start=Date.UTC(d.getUTCFullYear(),0,0); const doy=Math.floor((d.getTime()-start)/86400000); const lngHour=lon/15;
+  const calc=rise=>{ const t=doy+((rise?6:18)-lngHour)/24; const M=(0.9856*t)-3.289; let L=M+(1.916*Math.sin(M*rad))+(0.020*Math.sin(2*M*rad))+282.634; L=(L+360)%360; let RA=Math.atan(0.91764*Math.tan(L*rad))/rad; RA=(RA+360)%360; const Lq=Math.floor(L/90)*90, RAq=Math.floor(RA/90)*90; RA=(RA+(Lq-RAq))/15; const sinDec=0.39782*Math.sin(L*rad); const cosDec=Math.cos(Math.asin(sinDec)); const cosH=(Math.cos(90.833*rad)-(sinDec*Math.sin(lat*rad)))/(cosDec*Math.cos(lat*rad)); if(cosH>1||cosH<-1) return null; let H=rise? 360-Math.acos(cosH)/rad : Math.acos(cosH)/rad; H/=15; const T=H+RA-(0.06571*t)-6.622; let UT=(T-lngHour)%24; if(UT<0) UT+=24; return new Date(start+ (doy*24+UT)*3600000); };
+  return {rise:calc(true), set:calc(false)}; }
+function wallClock(){ const now=new Date(); const el=$('#wallClock'); if(el) el.textContent=now.toLocaleTimeString('en-US',{timeZone:TZ,hour:'numeric',minute:'2-digit'})+' MT';
+  const st=sunTimes(39.74,-104.99,now); const se=$('#wallSun'); if(se&&st.rise&&st.set){ const fmt=t=>t.toLocaleTimeString('en-US',{timeZone:TZ,hour:'numeric',minute:'2-digit'}); const day = now>st.rise && now<st.set; let next = day? st.set : (now<st.rise? st.rise : new Date(st.rise.getTime()+86400000)); const mins=Math.max(0,Math.round((next-now)/60000)); se.innerHTML = day? `☀ daylight · sunset ${fmt(st.set)} (${Math.floor(mins/60)} h ${mins%60} m)` : `☾ night at Denver · sunrise ${fmt(st.rise)} (in ${Math.floor(mins/60)} h ${mins%60} m)`; } }
+function buildRegistry(){ camRegistry=[]; (CAMS.passes||[]).forEach(c=>{ c._kind='pass'; camRegistry.push(c); }); Object.entries(CAMS.resorts||{}).forEach(([id,list])=>{ (list||[]).forEach(c=>{ const l=LOCATIONS.find(x=>x.id===id); c._kind='resort'; c._loc=[id]; c.sub=c.sub||(l?`${l.name} · ${l.state}`:''); c.region=c.region||(l?l.region:''); camRegistry.push(c); }); }); }
 function renderCamsTab(){
-  camTimers.forEach(t=>clearInterval(t)); camTimers.length=0;
-  const passes=(CAMS.passes||[]).filter(c=>!state.camRegion||c.region===state.camRegion);
-  renderCams();
-  const res=Object.entries(CAMS.resorts||{}).flatMap(([id,list])=>list||[]);
-  mountCamImages($('#camGridPasses'), passes); mountCamImages($('#camGridResorts'), res);
+  camTimers.forEach(t=>clearInterval(t)); camTimers.length=0; buildRegistry();
+  state.camRegion=state.camRegion||''; state.route=state.route||'';
+  // route bar
+  $('#routeBar').innerHTML = `<button class="chip" aria-pressed="${!state.route}" data-r="">All cams</button>`+ROUTES.map(r=>`<button class="chip" aria-pressed="${state.route===r.id}" data-r="${r.id}">${esc(r.name)}</button>`).join('');
+  $$('#routeBar .chip').forEach(b=>b.onclick=()=>{ state.route=b.dataset.r; renderCamsTab(); });
+  const route=ROUTES.find(r=>r.id===state.route);
+  if(route){ const stops=route.stops.map(([frag,mi])=>({c:camRegistry.find(x=>x._kind==='pass'&&x.name.includes(frag)), mi})).filter(x=>x.c); const dest=route.dest.flatMap(id=>camRegistry.filter(x=>x._kind==='resort'&&x._loc[0]===id)).slice(0,6);
+    const dl=route.dest.map(id=>LOCATIONS.find(l=>l.id===id)).filter(Boolean); const fc=dl.map(l=>{ const D=state.derived[l.id]; return D? `${l.short||l.name} ${inch(D.d1)}"` : null; }).filter(Boolean).join(' · ');
+    $('#routeStrip').innerHTML=`<div class="routeStrip"><div class="rsHead"><b>${esc(route.name)}</b><span class="wallSub">road cams in driving order from ${esc(route.from)}, then the destination${fc?` · next 24 h: ${fc}`:''}</span></div><div class="road">${stops.map(s=>`<div class="stop"><div class="mile"><i></i>mile ${s.mi}</div>${camCard(s.c, camRegistry.indexOf(s.c))}</div>`).join('')}${dest.map(c=>`<div class="stop dest"><div class="mile"><i></i>destination</div>${camCard(c, camRegistry.indexOf(c))}</div>`).join('')}</div></div>`; }
+  else $('#routeStrip').innerHTML='';
+  // pass grid with region filter
+  const passes=camRegistry.filter(c=>c._kind==='pass'); const regions=[...new Set(passes.map(c=>c.region).filter(Boolean))];
+  $('#camFilters').innerHTML = `<button class="chip" aria-pressed="${!state.camRegion}" data-r="">All</button>`+regions.map(r=>`<button class="chip" aria-pressed="${state.camRegion===r}" data-r="${esc(r)}">${esc(r)}</button>`).join('');
+  $$('#camFilters .chip').forEach(b=>b.onclick=()=>{ state.camRegion=b.dataset.r; renderCamsTab(); });
+  const shown=passes.filter(c=>!state.camRegion||c.region===state.camRegion);
+  $('#camGridPasses').innerHTML = shown.map(c=>camCard(c, camRegistry.indexOf(c))).join('') || '<p class="muted">No pass cams in this region.</p>';
+  const res=camRegistry.filter(c=>c._kind==='resort');
+  $('#camGridResorts').innerHTML = res.map(c=>camCard(c, camRegistry.indexOf(c))).join('');
+  renderCamMap(); mountCams($('#tab-cams')); updateOnline(); wallClock(); if(wallClockTimer) clearInterval(wallClockTimer); wallClockTimer=setInterval(wallClock, 30000);
+  $('#btnWall').onclick=()=>{ const first=camRegistry.findIndex(c=>c.kind!=='link'); if(first>=0){ openLightbox(first); setAuto(true); } };
 }
+function renderCamMap(){
+  const pts=camRegistry.map((c,i)=>({c,i,ll:camCoord(c)||(c._loc? (l=>l?[l.lat,l.lon]:null)(LOCATIONS.find(x=>x.id===c._loc[0])) : null)})).filter(p=>p.ll);
+  const rect=(a,b,c,d)=>`M${px(a)},${py(b)}L${px(c)},${py(b)}L${px(c)},${py(d)}L${px(a)},${py(d)}Z`;
+  let s=`<svg viewBox="0 0 ${MAP.W} ${MAP.H}" role="img" aria-label="Camera locations">`;
+  s+=`<path d="${rect(-109.05,41,-102.05,37)}" fill="none" stroke="#2a3a52"/><path d="M${px(-114.05)},${py(42)}L${px(-111.05)},${py(42)}L${px(-111.05)},${py(41)}L${px(-109.05)},${py(41)}L${px(-109.05)},${py(37)}L${px(-114.05)},${py(37)}Z" fill="none" stroke="#2a3a52"/><path d="${rect(-111.05,45,-104.05,41)}" fill="none" stroke="#2a3a52"/><path d="${rect(-109.05,37,-103.0,31.3)}" fill="none" stroke="#2a3a52"/>`;
+  s+=Object.entries(ROADS).map(([n,p])=>`<path d="M${p.map(q=>`${px(q[0]).toFixed(1)},${py(q[1]).toFixed(1)}`).join('L')}" fill="none" stroke="#26344a" stroke-width="${n.startsWith('I-')?2:1.2}" stroke-linejoin="round"/>`).join('');
+  s+=pts.map(p=>{ const [la,lo]=p.ll; const x=px(lo), y=py(la); const col=p.c._kind==='pass'? '#5aa2ff' : '#2dd4a0'; return `<g class="camDot" data-i="${p.i}" style="cursor:pointer" data-tip="${esc(`<b>${p.c.name}</b><br>${p.c.sub||''}<br><span class='muted'>click to view</span>`)}"><circle cx="${x}" cy="${y}" r="5" fill="${col}" fill-opacity=".85" stroke="#06101f" stroke-width="1.2"/></g>`; }).join('');
+  s+=`<text x="12" y="${MAP.H-12}" font-size="11" fill="#9fb0c6">● road cams  <tspan fill="#2dd4a0">●</tspan> resort cams</text></svg>`;
+  $('#camMap').innerHTML=s; bindTips($('#camMap'));
+  $$('#camMap .camDot').forEach(g=>g.onclick=()=>openLightbox(+g.dataset.i));
+}
+/* lightbox */
+function openLightbox(i){ const c=camRegistry[i]; if(!c||c.kind==='link') return; lbIdx=i; const lb=$('#lightbox'); lb.hidden=false; document.body.style.overflow='hidden';
+  $('#lbTitle').textContent=c.name; const fr=$('#lbFrame'); if(lbRefresh) clearInterval(lbRefresh);
+  if(c.kind==='img'){ fr.innerHTML=`<img alt="${esc(c.name)}" referrerpolicy="no-referrer">`; const im=fr.querySelector('img'); const load=()=>{ im.src=c.url+(c.url.includes('?')?'&':'?')+'t='+Date.now(); }; load(); lbRefresh=setInterval(load,15000); }
+  else if(c.kind==='youtube') fr.innerHTML=`<iframe src="https://www.youtube.com/embed/${esc(c.id)}?autoplay=1&mute=1&rel=0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
+  else fr.innerHTML=`<iframe src="${esc(c.url)}" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+  const ids=c.near||c._loc||[]; const l=ids.map(id=>LOCATIONS.find(x=>x.id===id)).find(Boolean); const D=l&&state.derived[l.id];
+  $('#lbFoot').innerHTML=`<span>${esc(c.sub||'')} · <a href="${esc(c.page||c.url)}" target="_blank" rel="noopener" style="color:#9fd0ff">${esc(c.provider||'source')} ↗</a></span><span>${D?`${esc(l.name)}: <b style="color:#fff">${inch(D.d1)} in</b> next 24 h · ${inch(D.d7)} in this week · ${D.conf.t} agreement`:''}</span>`; }
+function closeLightbox(){ $('#lightbox').hidden=true; document.body.style.overflow=''; if(lbRefresh) clearInterval(lbRefresh); setAuto(false); $('#lbFrame').innerHTML=''; }
+function stepLightbox(d){ if(lbIdx<0) return; let i=lbIdx; for(let k=0;k<camRegistry.length;k++){ i=(i+d+camRegistry.length)%camRegistry.length; if(camRegistry[i].kind!=='link' && (camRegistry[i].kind!=='img' || camRegistry[i]._ok!==false)) break; } openLightbox(i); }
+function setAuto(on){ lbAuto=on; if(lbTimer) clearInterval(lbTimer); lbTimer=null; if(on) lbTimer=setInterval(()=>stepLightbox(1), 8000); const b=$('#lbAuto'); if(b) b.textContent= on? '■ Stop auto-advance' : 'Auto-advance'; }
+document.addEventListener('DOMContentLoaded', ()=>{ $('#lbClose').onclick=closeLightbox; $('#lbPrev').onclick=()=>stepLightbox(-1); $('#lbNext').onclick=()=>stepLightbox(1); $('#lbAuto').onclick=()=>setAuto(!lbAuto); $('#lightbox').addEventListener('click',e=>{ if(e.target.id==='lightbox') closeLightbox(); });
+  document.addEventListener('keydown',e=>{ if($('#lightbox').hidden) return; if(e.key==='Escape') closeLightbox(); if(e.key==='ArrowRight') stepLightbox(1); if(e.key==='ArrowLeft') stepLightbox(-1); }); });
 function drawDetailCams(l){
-  const el=$('#detailCams'); if(!el) return;
-  const mine=(CAMS.resorts&&CAMS.resorts[l.id])||[]; const near=(CAMS.passes||[]).filter(c=>(c.near||[]).includes(l.id));
-  const list=[...mine, ...near];
-  if(!list.length){ el.innerHTML=`<p class="small muted">No cams wired for this location yet. <a href="${esc(l.camPage||'#')}" target="_blank" rel="noopener">${l.camPage?'Official webcam page ↗':''}</a></p>`; return; }
-  el.innerHTML=`<div class="camGrid">${list.map(camCard).join('')}</div>`; mountCamImages(el, list);
+  const el=$('#detailCams'); if(!el) return; if(!camRegistry.length) buildRegistry();
+  const list=camRegistry.filter(c=>(c._loc&&c._loc[0]===l.id)||(c.near||[]).includes(l.id));
+  if(!list.length){ el.innerHTML=`<p class="small muted">No cams wired for this location yet.</p>`; return; }
+  el.innerHTML=`<div class="wall" style="padding:12px"><div class="camGrid">${list.map(c=>camCard(c, camRegistry.indexOf(c))).join('')}</div></div>`; mountCams(el);
 }
 /* ===================== Sources & methods tab ===================== */
 function renderSources(){
@@ -1637,7 +1756,7 @@ function init(){
   $('#blendMode').onchange=e=>{ state.prefs.blendMode=e.target.value; savePrefs(); computeAll(); renderAll(); if(state.selected) openDetail(state.selected); };
   $('#btnRefresh').onclick=()=>loadAll(true);
   $('#btnTheme').onclick=()=>{ const cur=document.documentElement.getAttribute('data-theme'); const sysDark=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches; const isDark= cur? cur==='dark' : sysDark; state.prefs.theme= isDark?'light':'dark'; savePrefs(); applyTheme(); };
-  $$('nav.tabs button').forEach(b=>b.onclick=()=>{ $$('nav.tabs button').forEach(x=>x.setAttribute('aria-selected', x===b)); $$('[role=tabpanel]').forEach(p=>p.hidden = p.id!=='tab-'+b.dataset.tab); $('#filters').hidden = b.dataset.tab==='sources'||b.dataset.tab==='cams'; if(b.dataset.tab==='cams') renderCamsTab(); else { camTimers.forEach(t=>clearInterval(t)); camTimers.length=0; } });
+  $$('nav.tabs button').forEach(b=>b.onclick=()=>{ $$('nav.tabs button').forEach(x=>x.setAttribute('aria-selected', x===b)); $$('[role=tabpanel]').forEach(p=>p.hidden = p.id!=='tab-'+b.dataset.tab); $('#filters').hidden = b.dataset.tab==='sources'||b.dataset.tab==='cams'; if(b.dataset.tab==='cams') renderCamsTab(); else { camTimers.forEach(t=>clearInterval(t)); camTimers.length=0; if(typeof wallClockTimer!=='undefined'&&wallClockTimer){ clearInterval(wallClockTimer); wallClockTimer=null; } } });
   $('#scrim').onclick=closeDetail; document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeDetail(); });
   renderRegionChips(); renderSources(); renderCompareOptions();
   $('#ledger thead').innerHTML='<tr>'+COLS.map(c=>`<th>${c.t}</th>`).join('')+'</tr>';

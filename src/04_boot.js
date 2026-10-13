@@ -130,7 +130,7 @@ function init(){
   $('#blendMode').onchange=e=>{ state.prefs.blendMode=e.target.value; savePrefs(); computeAll(); renderAll(); if(state.selected) openDetail(state.selected); };
   $('#btnRefresh').onclick=()=>loadAll(true);
   $('#btnTheme').onclick=()=>{ const cur=document.documentElement.getAttribute('data-theme'); const sysDark=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches; const isDark= cur? cur==='dark' : sysDark; state.prefs.theme= isDark?'light':'dark'; savePrefs(); applyTheme(); };
-  $$('nav.tabs button').forEach(b=>b.onclick=()=>{ $$('nav.tabs button').forEach(x=>x.setAttribute('aria-selected', x===b)); $$('[role=tabpanel]').forEach(p=>p.hidden = p.id!=='tab-'+b.dataset.tab); $('#filters').hidden = b.dataset.tab==='sources'||b.dataset.tab==='cams'; if(b.dataset.tab==='cams') renderCamsTab(); else { camTimers.forEach(t=>clearInterval(t)); camTimers.length=0; } });
+  $$('nav.tabs button').forEach(b=>b.onclick=()=>{ $$('nav.tabs button').forEach(x=>x.setAttribute('aria-selected', x===b)); $$('[role=tabpanel]').forEach(p=>p.hidden = p.id!=='tab-'+b.dataset.tab); $('#filters').hidden = b.dataset.tab==='sources'||b.dataset.tab==='cams'; if(b.dataset.tab==='cams') renderCamsTab(); else { camTimers.forEach(t=>clearInterval(t)); camTimers.length=0; if(typeof wallClockTimer!=='undefined'&&wallClockTimer){ clearInterval(wallClockTimer); wallClockTimer=null; } } });
   $('#scrim').onclick=closeDetail; document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeDetail(); });
   renderRegionChips(); renderSources(); renderCompareOptions();
   $('#ledger thead').innerHTML='<tr>'+COLS.map(c=>`<th>${c.t}</th>`).join('')+'</tr>';
